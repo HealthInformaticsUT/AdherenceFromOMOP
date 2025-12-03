@@ -1,0 +1,26 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/a00_intro.html</loc></url>
+<url><loc>/articles/a01-getting-started.html</loc></url>
+<url><loc>/articles/a02-generate-data.html</loc></url>
+<url><loc>/articles/a03-calculating-adherence.html</loc></url>
+<url><loc>/articles/a04-adherence.html</loc></url>
+<url><loc>/articles/adherenceFromOMOP.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/reference/add_info_to_adherence.html</loc></url>
+<url><loc>/reference/adherenceCalculations.html</loc></url>
+<url><loc>/reference/adherenceCalculationsLoader.html</loc></url>
+<url><loc>/reference/AdherenceFromOMOP-package.html</loc></url>
+<url><loc>/reference/adherenceSlidingWindow.html</loc></url>
+<url><loc>/reference/adherenceSlidingWindowLoader.html</loc></url>
+<url><loc>/reference/adherence_dashboard.html</loc></url>
+<url><loc>/reference/adherence_dashboard_summarized.html</loc></url>
+<url><loc>/reference/adherence_summary.html</loc></url>
+<url><loc>/reference/generateChronicDrugExposure.html</loc></url>
+<url><loc>/reference/generateIngredientSet.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/mockAdherenceFromOMOP.html</loc></url>
+</urlset>
+

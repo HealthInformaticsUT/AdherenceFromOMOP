@@ -1,0 +1,10 @@
+pandoc: '3.4'
+pkgdown: 2.1.0
+pkgdown_sha: ~
+articles:
+  a01-getting-started: a01-getting-started.html
+  a02-generate-data: a02-generate-data.html
+  a03-calculating-adherence: a03-calculating-adherence.html
+  a04-adherence: a04-adherence.html
+  adherenceFromOMOP: adherenceFromOMOP.html
+last_built: 2025-09-12T13:32Z

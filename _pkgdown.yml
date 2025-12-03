@@ -1,0 +1,36 @@
+template:
+  bootstrap: 5
+  light-switch: yes
+  bslib:
+    primary: '#0054AD'
+    border-radius: 0.5rem
+    btn-border-radius: 0.25rem
+    danger: '#A6081A'
+
+reference:
+- subtitle: Data generation
+  desc: Retrieves records from drug exposure table
+- contents:
+  - generateChronicDrugExposure
+- subtitle: Adherence calculations
+  desc: Functions used to calculate medication adherence
+- contents:
+  - adherenceCalculationsLoader
+  - adherenceSlidingWindowLoader
+  - adherenceCalculations
+  - adherenceSlidingWindow
+- subtitle: Add features to data
+  desc: Possibility to add cohorts as features and patient characteristics
+- contents:
+  - addCohorts
+  - addBMI
+  - loadData
+  - addPatientInformation
+- subtitle: Population stats
+  desc: View statistics? praegu ainult count
+- contents:
+  - countPeople
+- subtitle: Mockdata generation
+  desc: Testing package and demos
+- contents:
+  - mockAdherenceFromOMOP

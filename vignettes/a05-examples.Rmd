@@ -1,0 +1,186 @@
+---
+title: "Example use cases with statins"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Example use cases with statins}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Example use cases with statins
+
+## Database connection
+
+```{r, eval=FALSE}
+readRenviron("~/.Renviron")
+
+writePrefix <- "adherencefromomop_"
+
+db <- DBI::dbConnect(
+  RPostgres::Postgres(),
+  dbname = Sys.getenv("DB_NAME"),
+  host = Sys.getenv("DB_HOST"),
+  user = Sys.getenv("DB_USERNAME"),
+  password = Sys.getenv("DB_PASSWORD"),
+  port = Sys.getenv("DB_PORT")
+)
+
+cdm <- CDMConnector::cdmFromCon(
+  con = db,
+  cdmSchema = Sys.getenv("OHDSI_CDM"),
+  writeSchema = Sys.getenv("OHDSI_WRITE"),
+  writePrefix = writePrefix
+)
+```
+
+```{r, eval=FALSE}
+statiinid <- c("Atorvastatin", "Rosuvastatin", "Simvastatin", "Pravastatin", "Fluvastatin", "Lovastatin", "Pitavastatin")
+```
+
+## Adherence for each statin group
+
+```{r, eval=FALSE}
+medicationGroups <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm,
+                                                      name = statiinid,
+                                                      nameStyle = "{concept_code}")
+
+ingredientNames <- names(medicationGroups)
+concepts <- unlist(medicationGroups, use.names = F)
+
+```
+
+```{r, eval=FALSE}
+# generate chronic drug exposure uses codelist generator for finding suitable drugs by default ingredients (provided by drugConceptList) are included 1 out of inf.
+
+all_statins <- generateChronicDrugExposure(
+  cdm = cdm,
+  drugConceptIdList = concepts,
+  name = "statins_study",
+  overwrite = T
+)
+
+# if the table already exists in database
+all_statins <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study", CDMConnector::dbms(db)))
+```
+
+To calculate adherence for each medication group the groups must be defined first:
+
+```{r, eval=FALSE}
+adherenceCMA5 <- adherenceCalculationsLoader(
+  reference = all_statins,
+  cdm = cdm,
+  medicationGroup = medicationGroups,
+  resultsTableName = "statins_cma5",
+  cma = "CMA5"
+)
+
+# if the table already exists in database
+adherenceCMA5 <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_cma5", CDMConnector::dbms(db)))
+```
+
+## Adherence for each statin group using cohorts
+
+For selecting people from specific cohorts cohort id and cohort schema values must be used.
+
+```{r, eval=FALSE}
+all_statins_cohort <- generateChronicDrugExposure(
+  cdm = cdm,
+  drugConceptList = statiinid,
+  name = "statins_study_1688",
+  overwrite = T,
+  cohortId = 1688,
+  cohortSchema = "ohdsi_results_202503"
+)
+
+# if the table already exists in database
+
+all_statins_cohort <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688", CDMConnector::dbms(db)))
+```
+
+### Combining medication groups for simvastatin and rosuvastatin
+
+```{r, eval=FALSE}
+medicationGroups <- CodelistGenerator::getDrugIngredientCodes(
+  cdm = cdm,
+  name = c("Atorvastatin", "Rosuvastatin", "Simvastatin", "Pravastatin", "Fluvastatin", "Lovastatin", "Pitavastatin"),
+  nameStyle = "{concept_name}"
+)
+
+medicationGroups[["simvastatin_rosuvastatin"]] <- c(medicationGroups[["simvastatin"]], medicationGroups[["rosuvastatin"]])
+
+medicationGroups[["simvastatin"]] <- NULL
+medicationGroups[["rosuvastatin"]] <- NULL
+
+names(medicationGroups)
+```
+
+```{r, eval=FALSE}
+adherenceCMA5 <- adherenceCalculationsLoader(
+  reference = all_statins_cohort,
+  cdm = cdm,
+  medicationGroup = medicationGroups,
+  resultsTableName = "statins_study_1688_medgroups",
+  cma = "CMA5"
+)
+```
+
+```{r, eval=FALSE}
+adherenceCMA5SW <- adherenceSlidingWindowLoader(
+  reference = all_statins_cohort,
+  cdm = cdm,
+  medicationGroup = medicationGroups,
+  resultsTableName = "statins_study_1688_medgroups_sw",
+  cma = "CMA5",
+  sliding.window.start = 0,
+  sliding.window.start.unit = c("days", "weeks", "months", "years")[1],
+  sliding.window.duration = 3,
+  sliding.window.duration.unit = c("days", "weeks", "months", "years")[4],
+  sliding.window.step.duration = 3,
+  sliding.window.step.unit = c("days", "weeks", "months", "years")[4],
+)
+```
+
+## Add cohorts and data
+
+```{r, eval=FALSE}
+all_statins_cohort <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688", CDMConnector::dbms(db)))
+
+adherenceCMA5 <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups", CDMConnector::dbms(db)))
+
+addCohort(cdm, adherenceCMA5, paste0(getwd(), "/inst/cohorts"))
+```
+
+```{r, eval=FALSE}
+all_statins_cohort <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688", CDMConnector::dbms(db)))
+
+adherenceCMA5 <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups", CDMConnector::dbms(db)))
+
+table <- addData(adherenceCMA5, all_statins_cohort)
+```
+
+```{r, eval=FALSE}
+all_statins_cohort <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688", CDMConnector::dbms(db)))
+
+adherenceCMA5SW <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups_sw", CDMConnector::dbms(db)))
+
+table <- addData(adherenceCMA5SW, all_statins_cohort)
+```
+
+```{r, eval = FALSE}
+cli::cli_alert_info(paste0("Cohorts from ", pathToCohortJsonFiles))
+
+cohortSet <- CDMConnector::readCohortSet(pathToCohortJsonFiles)
+cdm <- CDMConnector::generateCohortSet(cdm, cohortSet, name = "cohort")
+```
+
+```{r, eval = FALSE}
+stats <- countPeople(cdm, adherenceCMA5, all_statins_cohort, "ohdsi_results_202503", c("1688"))
+
+#   `Number of people CMA generated for`
+# [1] 1039
+#
+# $`Drug exposure record count for time period t`
+#
+# $`Number of people in cohort`
+# [1] 1174
+```

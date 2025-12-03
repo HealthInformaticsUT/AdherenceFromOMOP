@@ -1,0 +1,40 @@
+---
+title: "Data generation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data generation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Working with cohorts
+
+```{r, eval = FALSE, include = FALSE}
+# preparation, no need to replicate
+cdm <- mockAdherenceFromOMOP()
+
+cohort <- dplyr::tibble(
+  cohort_definition_id = 1, person_id = 1,
+  cohort_start_date = as.Date("1980-01-01"),
+  cohort_end_date = as.Date("2020-01-10")
+)
+
+DBI::dbWriteTable(conn = connection, name = DBI::Id(schema = "main", table = "cohort"), value = cohort, append = TRUE)
+  
+```
+
+Possible to include only certain people that exist in a specific previously defined cohort between a time period. For this add cohort schema and cohort id values
+
+```{r, eval = FALSE}
+chronicDrugExposureCohort <- generateChronicDrugExposure(
+  cdm = cdm,
+  name =  "test_table",
+  overwrite = T,
+  cohortSchema = "main",
+  cohortId = 1,
+)
+```
+
+## Using drugConceptIdList variable
+
+tba
