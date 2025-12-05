@@ -46,7 +46,6 @@ medicationGroups <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm,
 
 ingredientNames <- names(medicationGroups)
 concepts <- unlist(medicationGroups, use.names = F)
-drugConceptIdList
 ```
 
 ```{r, eval=FALSE}
@@ -142,45 +141,24 @@ adherenceCMA5SW <- adherenceSlidingWindowLoader(
 
 ## Add cohorts and data
 
+Adding cohorts as features to CMA data requires cohort table as input variable. It is recommended to use CDMConnector for generating this.
+
 ```{r, eval=FALSE}
-all_statins_cohort <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688", CDMConnector::dbms(db)))
+cohortSet <- CDMConnector::readCohortSet("./inst")
+cdm <- CDMConnector::generateCohortSet(cdm, cohortSet, "cohort")
 
-adherenceCMA5 <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups", CDMConnector::dbms(db)))
+cohortTable <- dplyr::collect(cdm$cohort)
 
-addCohort(cdm, adherenceCMA5, paste0(getwd(), "/inst/cohorts"))
+cma_values_with_cohort_features <- addCohort(adherenceCMA5, cohortTable)
 ```
 
 ```{r, eval=FALSE}
-all_statins_cohort <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688", CDMConnector::dbms(db)))
-
-adherenceCMA5 <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups", CDMConnector::dbms(db)))
-
-table <- addData(adherenceCMA5, all_statins_cohort)
-```
-
-```{r, eval=FALSE}
-all_statins_cohort <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688", CDMConnector::dbms(db)))
-
-adherenceCMA5SW <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups_sw", CDMConnector::dbms(db)))
-
-table <- addData(adherenceCMA5SW, all_statins_cohort)
+cma_data_with_bmi <- addBMI(adherenceCMA5, cdm)
 ```
 
 ```{r, eval = FALSE}
-cli::cli_alert_info(paste0("Cohorts from ", pathToCohortJsonFiles))
+stats <- countPeople(cdm = cdm,
+                        cmaTable = adherenceCMA5,
+                        generatedTable = all_statins)
 
-cohortSet <- CDMConnector::readCohortSet(pathToCohortJsonFiles)
-cdm <- CDMConnector::generateCohortSet(cdm, cohortSet, name = "cohort")
-```
-
-```{r, eval = FALSE}
-stats <- countPeople(cdm, adherenceCMA5, all_statins_cohort, "ohdsi_results_202503", c("1688"))
-
-#   `Number of people CMA generated for`
-# [1] 1039
-#
-# $`Drug exposure record count for time period t`
-#
-# $`Number of people in cohort`
-# [1] 1174
 ```
