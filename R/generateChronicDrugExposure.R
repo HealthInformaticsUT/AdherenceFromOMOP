@@ -49,7 +49,7 @@ generateChronicDrugExposure <- function(cdm,
   } else {
     cli::cli_alert_info("Using the drug concept id list")
 
-    data <- dplyr::filter(cdm$drug_exposure, drug_concept_id %in% !!drugConceptIdList)
+    data <- dplyr::filter(cdm$drug_exposure, drug_concept_id %in% drugConceptIdList)
   }
 
   cli::cli_alert_info("Using Patient Profiles package to add patient data.")

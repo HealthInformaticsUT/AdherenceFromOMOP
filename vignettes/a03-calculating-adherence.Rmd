@@ -9,48 +9,70 @@ vignette: >
 
 ## Overview
 
-Calculating medication adherence is dependent on the CMA chosen for the task. In AdherenceFromOMOP CMA values 1-9 are supported, for examples on different CMA behaviours see article [Intro to CMA](a04-adherence.html) In this package adherenceSlidingWindow and adherenceCalculations are wrappers for functions in [Adherer](https://www.adherer.eu/ "link to package") package.
+Medication adherence calculations depend on the **CMA** (Continuous Medication Availability) measure selected. **AdherenceFromOMOP** supports CMA types **1–9**. For examples illustrating the behavior of different CMA types, see the [Intro to CMA](#0){style="font-size: 11pt;"} tutorial. In this package adherenceSlidingWindow and adherenceCalculations are wrappers for functions in [Adherer](#0 "link to package"){style="font-size: 11pt;"} package.
 
-For more detailed information see [AdhereR documentation](https://cran.r-project.org/web/packages/AdhereR/AdhereR.pdf "link to cran").
+For more detailed guidance, refer to the [AdhereR documentation](https://cran.r-project.org/web/packages/AdhereR/AdhereR.pdf "link to cran").
 
-For large datasets adherenceSlidingWindowLoader and adherenceCalculationsLoader are recommended. Data for calculating adherence is loaded partially to memory and results are written directly to database.
+For large datasets, it is recommended to use `adherenceSlidingWindowLoader` and `adherenceCalculationsLoader`, which load data in chunks and write results directly to the database.
 
-In [Adherer](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426) software the follow-up window is the total period for which relevant medication events are recorded for included patients and observation window is the period within the follow-up window for which the adherence is computed.
+In [Adherer](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426) software the follow-up window is the total period for which relevant medication events are recorded for patients, while the observation window is the period within the follow-up window over which adherence is actually computed.
 
-In omop terms there are two possible ways to calculate adherence depending whether [cohorts](a02-generate-data.html) were used for generating data:
+Within the OMOP framework, adherence can be computed in two ways, depending on whether [cohorts](a02-generate-data.html) are used during data generation:
 
--   when cohorts are present: cohort start and end date determine the AdhereR observation window and observation period start and end date determine the AdhereR follow-up window,
+-    **When cohorts are present:**
 
--   otherwise the observation period start and end date determine both AdhereR follow-up and observation window.
+    -   *Cohort start/end dates* define the **AdhereR observation window**.
+
+    -   *Observation period start/end dates* define the **AdhereR follow-up window**.
+
+-   **When cohorts are not used:**
+
+    -    The *observation period start/end dates* define **both** the follow-up and observation windows.
 
 ## General medication adherence
 
 This is used for calculating adherence throughout subjects observation period.
 
-```{r, eval=FALSE, include = FALSE}
-adherenceCalculationsLoader(referenceToTable, cdm, name = "AdherenceFromOMOP_results_table_name", batchSize = 1000)
+```{r, eval=FALSE, include=FALSE, message=FALSE}
+cdm <- mockAdherenceFromOMOP()
+
+chronicDrugExposure <- generateChronicDrugExposure(
+  cdm = cdm,
+  name = "chronic_drug_exposure_table",
+  overwrite = T
+)
+```
+
+```{r, eval=FALSE, include = TRUE, message = FALSE}
+results <- adherenceCalculationsLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_results_table_name", batchSize = 1000, cma = c("CMA9"))
+results
 ```
 
 ## Medication adherence with sliding window
 
-This is used for calculating medication adherence during the observation period using sliding window time periods within the observation period.
+This approach computes adherence over a series of sliding windows within the observation period, allowing adherence to be examined over time.
 
-```{r, eval = FALSE}
-adherenceSlidingWindowLoader(referenceToTable, cdm, name = "AdherenceFromOMOP_results_table_name", batchSize = 1000)
+```{r, eval = FALSE, message = FALSE}
+results <- adherenceSlidingWindowLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_results_table_name", batchSize = 1000, cma = c("CMA5"))
+results
 ```
 
 ## Medication groups
 
-By default CMA value shows information about all available medication data in dataset provided to the functions. To group some or separate all medications medicationGroups variable is used. The format is a named list and it is recommended to use CodelistGenerator for generating these lists. Overlaps in groups do not affect the CMA values (nothing is left out). For more information see medication.groups variable in AdhereR.
+By default, CMA values are calculated using all medication data available in the input dataset. To compute adherence for specific drug groups or to separate medications into categories, the `medicationGroups` argument can be supplied. This argument expects a *named list*. It is recommended to generate these lists using the **CodelistGenerator** package.\
+If medications overlap across groups, CMA values are unaffected (no data is omitted). For more details, see the `medication.groups` documentation in **AdhereR**.
 
-Below is a sample of building medication groups manually.
+Below is an example of manually creating medication groups:
 
-```{r, eval = FALSE}
-medicationGroup <- list(c(1, 2), c(2, 3, 4)) # these are filled with drug_concept_ids
+```{r, eval = FALSE, message=FALSE}
+medicationGroup <- list(
+  c(1, 2),
+  c(2, 3, 4)   # vectors of drug_concept_ids
+)
 groupNames <- c("group1", "group2")
 
 names(medicationGroup) <- groupNames
 
-# for better visual
+# Optional: wrap for improved display
 medicationGroup <- omopgenerics::newCodelist(medicationGroup)
 ```

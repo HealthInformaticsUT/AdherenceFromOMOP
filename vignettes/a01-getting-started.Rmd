@@ -11,18 +11,18 @@ vignette: >
 
 ## Calculating adherence
 
-Using adhereceFromOMOP is a two-step process. Firstly necessary data is gathered to specified table in the database. After that adherenceCalculations or adherenceSlidingWindow can be used with in memory data. For larger datasets loader functions are recommended.
+Using adherenceFromOMOP involves two main steps. First, the required data must be retrieved and written to a designated table in the database.
 
-```{r, eval = FALSE, echo = FALSE}
+```{r, eval = FALSE, echo = FALSE, message = FALSE}
 # Step 0 - cdm connection
 devtools::load_all()
 cdm <- mockAdherenceFromOMOP()
 cdm
 ```
 
-Function generateChronicDrugExposure is used to query necessary data. For drugConceptIdList input variable, which expects drug_concept_id values in a list, it is recommended to use [CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
+To extract the necessary data, use generateChronicDrugExposure. For drugConceptIdList input variable, which expects drug_concept_id values in a list, it is recommended to use [CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
 
-```{r, eval = FALSE, echo=FALSE}
+```{r, eval = FALSE, echo=FALSE, message = FALSE}
 # recommended method for acquiring drug_concept_id values
 drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c(42899580, 37498042))
 concepts_ids <- unlist(drugIngredientCodes, use.names = F)
@@ -38,66 +38,33 @@ chronicDrugExposure <- generateChronicDrugExposure(
 chronicDrugExposure
 ```
 
-Next step requires variable that contains reference to the table created.
 
-```{r, eval = FALSE}
-# Not a mandatory step but just an option
-connection <- CDMConnector::cdmCon(cdm)
-name <- "chronic_drug_exposure_table"
+Medication groups can be defined to calculate adherence by therapeutic category.
+Here, we reuse the earlier drugIngredientCodes object. To compute adherence, for large datasets use the loader functions.
 
-chronicDrugExposure <- dplyr::tbl(
-  connection,
-  CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = name, CDMConnector::dbms(connection))
-)
-```
-
-By defining medication groups adherence calculations can be grouped for medications. We can use the previously created drugIngredientCodes variable.
-
-Next step is calculating adherence. For larger datasets functions ending with 'loader' should be used.
-
-```{r, eval = FALSE}
+```{r, eval = FALSE, message = FALSE}
 adherenceCalculationsLoader(
   reference = chronicDrugExposure,
   cdm = cdm,
   medicationGroup = drugIngredientCodes,
   resultsTableName = "name_of_table_that_contains_cma",
   cma = c(
-    "CMA5"
+    "CMA3"
   )
 )
-```
-
-```{r, eval = FALSE}
-# Step 2 - calculating adherence
-CMA_sliding_window_for_each_patient <- adherenceSlidingWindowLoader(
-  reference = chronicDrugExposure,
-  cdm = cdm,
-  medicationGroup = drugIngredientCodes,
-  resultsTableName = "name_of_table_that_contains_cma_sw",
-  sliding.window.start = 0,
-  sliding.window.start.unit = c("days", "weeks", "months", "years")[1],
-  sliding.window.duration = 1,
-  sliding.window.duration.unit = c("days", "weeks", "months", "years")[4],
-  sliding.window.step.duration = 1,
-  sliding.window.step.unit = c("days", "weeks", "months", "years")[4],
-  cma = c(
-    "CMA5"
-  )
-)
-CMA_sliding_window_for_each_patient
 ```
 
 ## Adding features to CMA values
 
-Features are added to sliding window time periods or observation period.
+You can add features either to the sliding-window periods or to the overall observation period.
 
-Adding BMI values to CMA data.
+### Adding BMI values
 
 ```{r, eval = FALSE}
 data <- addBMI(CMA_sliding_window_for_each_patient, cdm)
 ```
 
-To add specified cohorts as columns to CMA data.
+### Adding cohort membership as columns 
 
 ```{r,eval = FALSE}
 # when using notebook this command has to be copied to the console

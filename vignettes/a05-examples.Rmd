@@ -46,7 +46,7 @@ medicationGroups <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm,
 
 ingredientNames <- names(medicationGroups)
 concepts <- unlist(medicationGroups, use.names = F)
-
+drugConceptIdList
 ```
 
 ```{r, eval=FALSE}

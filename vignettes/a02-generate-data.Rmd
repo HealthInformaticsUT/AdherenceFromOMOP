@@ -7,23 +7,31 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+It is possible to calculate adherence without using generateChronicDrugExposure(). However guidelines are only provided for using it.
+
 ## Working with cohorts
+
+It is useful to restrict adherence calculations to only those individuals who belong to a specific cohort. AdherenceFromOMOP supports this directly through the `cohortSchema` and `cohortId` arguments in **generateChronicDrugExposure()**
 
 ```{r, eval = FALSE, include = FALSE}
 # preparation, no need to replicate
 cdm <- mockAdherenceFromOMOP()
 
 cohort <- dplyr::tibble(
-  cohort_definition_id = 1, person_id = 1,
+  cohort_definition_id = 1, subject_id = 1,
   cohort_start_date = as.Date("1980-01-01"),
   cohort_end_date = as.Date("2020-01-10")
 )
 
-DBI::dbWriteTable(conn = connection, name = DBI::Id(schema = "main", table = "cohort"), value = cohort, append = TRUE)
+DBI::dbWriteTable(conn = CDMConnector::cdmCon(cdm), name = DBI::Id(schema = "main", table = "cohort"), value = cohort, append = TRUE)
   
 ```
 
-Possible to include only certain people that exist in a specific previously defined cohort between a time period. For this add cohort schema and cohort id values
+Only drug exposure events that satisfy the following conditions are included:
+
+1.   The person_id is included in the cohort, and
+
+2.   drug_exposure_start_date falls within the cohort start–end period
 
 ```{r, eval = FALSE}
 chronicDrugExposureCohort <- generateChronicDrugExposure(
@@ -37,4 +45,4 @@ chronicDrugExposureCohort <- generateChronicDrugExposure(
 
 ## Using drugConceptIdList variable
 
-tba
+You may optionally restrict the included drug exposure events to a specific list of **drug_concept_id** values using the `drugConceptIdList` argument. This list can be generated manually or, more conveniently, with **CodelistGenerator::getDrugIngredientCodes()**.

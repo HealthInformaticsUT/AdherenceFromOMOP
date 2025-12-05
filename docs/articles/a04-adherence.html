@@ -4,503 +4,370 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Intro to CMA • AdherenceFromOMOP</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
-<script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
-<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Intro to CMA">
-<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
-<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+<script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Intro to CMA">
 </head>
-<body data-spy="scroll" data-target="#toc">
+<body>
+    <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <div class="container template-article">
-      <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
-  <div class="container">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <span class="navbar-brand">
-        <a class="navbar-link" href="../index.html">AdherenceFromOMOP</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
-      </span>
-    </div>
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
-    <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
-<li>
-  <a href="../reference/index.html">Reference</a>
-</li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Articles
+    <a class="navbar-brand me-2" href="../index.html">AdherenceFromOMOP</a>
 
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-<li>
-      <a href="../articles/a01-getting-started.html">Getting Started</a>
-    </li>
-    <li>
-      <a href="../articles/a02-generate-data.html">Data generation</a>
-    </li>
-    <li>
-      <a href="../articles/a03-calculating-adherence.html">Calculating Adherence</a>
-    </li>
-    <li>
-      <a href="../articles/a04-adherence.html">Intro to CMA</a>
-    </li>
-    <li>
-      <a href="../articles/adherenceFromOMOP.html">Introduction to adherenceFromOMOP</a>
-    </li>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div id="navbar" class="collapse navbar-collapse ms-3">
+      <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="active nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/a01-getting-started.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="../articles/a02-generate-data.html">Data generation</a></li>
+    <li><a class="dropdown-item" href="../articles/a03-calculating-adherence.html">Calculating Adherence</a></li>
+    <li><a class="dropdown-item" href="../articles/a04-adherence.html">Intro to CMA</a></li>
+    <li><a class="dropdown-item" href="../articles/a05-examples.html">Example use cases with statins</a></li>
   </ul>
 </li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="navbar-nav">
+<li class="nav-item"><form class="form-inline" role="search">
+ <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
+</form></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
+<li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
+  </ul>
+</li>
+      </ul>
 </div>
-<!--/.nav-collapse -->
+
+
   </div>
-<!--/.container -->
-</div>
-<!--/.navbar -->
+</nav><div class="container template-article">
 
 
 
-      </header><div class="row">
-  <div class="col-md-9 contents">
-    <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Intro to CMA</h1>
+
+<div class="row">
+  <main id="main" class="col-md-9"><div class="page-header">
+
+      <h1>Intro to CMA</h1>
             
       
 
-      <div class="hidden name"><code>a04-adherence.Rmd</code></div>
-
+      <div class="d-none name"><code>a04-adherence.Rmd</code></div>
     </div>
 
     
     
+<p>Medication adherence can be quantified in several different ways
+depending on how days supply, gaps, and observation periods are
+interpreted.<br>
+The AdherenceFromOMOP package supports all nine variations of
+<em>Continuous Multiple-Interval Measures of Medication
+Availability/Gaps</em> (CMA1–CMA9) implemented in AdhereR.<br>
+This vignette provides short examples of how each CMA behaves using a
+small synthetic dataset.</p>
+<p>For detailed documentation, see: <a href="https://www.adherer.eu/adherence/" class="external-link uri">https://www.adherer.eu/adherence/</a></p>
 <div class="section level2">
-<h2 id="adherence-using-cma-continuous-multiple-interval-measures-of-medication-availabilitygaps">Adherence using CMA (continuous multiple-interval measures of
-medication availability/gaps)<a class="anchor" aria-label="anchor" href="#adherence-using-cma-continuous-multiple-interval-measures-of-medication-availabilitygaps"></a>
+<h2 id="example-dataset">Example Dataset<a class="anchor" aria-label="anchor" href="#example-dataset"></a>
 </h2>
-<p><a href="https://www.adherer.eu/adherence/" class="external-link uri">https://www.adherer.eu/adherence/</a></p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">AdherenceFromOMOP</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">sample_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  person_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>,</span>
-<span>  drug_concept_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span>,</span>
-<span>  drug_exposure_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2010-12-02"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-05-31"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-06-30"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-12-27"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2012-03-26"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-05-31"</span><span class="op">)</span>,<span class="co"># // other patient</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-06-30"</span><span class="op">)</span>, </span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-12-27"</span><span class="op">)</span>, <span class="co">#</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-06-30"</span><span class="op">)</span> <span class="co"># // last pt</span></span>
-<span>    <span class="co">#as.Date("2011-12-27")</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  days_supply <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">60</span>,<span class="fl">30</span>,<span class="fl">90</span>,<span class="fl">180</span>,<span class="fl">180</span>,<span class="fl">60</span>,<span class="fl">90</span>,<span class="fl">30</span>, <span class="fl">90</span><span class="op">)</span>,</span>
-<span>  cohort_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-01-06"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span>,</span>
-<span>  cohort_end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2012-05-01"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span>,</span>
-<span>  observation_period_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2009-11-07"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span>,</span>
-<span>  observation_period_end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2013-06-01"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">sample_data</span></span></code></pre></div>
-<pre><code><span><span class="co">##   person_id drug_concept_id drug_exposure_start_date days_supply</span></span>
-<span><span class="co">## 1         1               1               2010-12-02          60</span></span>
-<span><span class="co">## 2         1               1               2011-05-31          30</span></span>
-<span><span class="co">## 3         1               1               2011-06-30          90</span></span>
-<span><span class="co">## 4         1               1               2011-12-27         180</span></span>
-<span><span class="co">## 5         1               1               2012-03-26         180</span></span>
-<span><span class="co">## 6         2               1               2011-05-31          60</span></span>
-<span><span class="co">## 7         2               1               2011-06-30          90</span></span>
-<span><span class="co">## 8         2               1               2011-12-27          30</span></span>
-<span><span class="co">## 9         3               1               2011-06-30          90</span></span>
-<span><span class="co">##   cohort_start_date cohort_end_date observation_period_start_date</span></span>
-<span><span class="co">## 1        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 2        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 3        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 4        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 5        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 6        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 7        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 8        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">## 9        2011-01-06      2012-05-01                    2009-11-07</span></span>
-<span><span class="co">##   observation_period_end_date</span></span>
-<span><span class="co">## 1                  2013-06-01</span></span>
-<span><span class="co">## 2                  2013-06-01</span></span>
-<span><span class="co">## 3                  2013-06-01</span></span>
-<span><span class="co">## 4                  2013-06-01</span></span>
-<span><span class="co">## 5                  2013-06-01</span></span>
-<span><span class="co">## 6                  2013-06-01</span></span>
-<span><span class="co">## 7                  2013-06-01</span></span>
-<span><span class="co">## 8                  2013-06-01</span></span>
-<span><span class="co">## 9                  2013-06-01</span></span></code></pre>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">AdherenceFromOMOP</span><span class="fu">::</span><span class="fu"><a href="../reference/adherenceCalculations.html">adherenceCalculations</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">sample_data</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<colgroup>
+<col width="6%">
+<col width="10%">
+<col width="16%">
+<col width="7%">
+<col width="11%">
+<col width="10%">
+<col width="19%">
+<col width="18%">
+</colgroup>
+<thead><tr class="header">
+<th align="right">person_id</th>
+<th align="right">drug_concept_id</th>
+<th align="left">drug_exposure_start_date</th>
+<th align="right">days_supply</th>
+<th align="left">cohort_start_date</th>
+<th align="left">cohort_end_date</th>
+<th align="left">observation_period_start_date</th>
+<th align="left">observation_period_end_date</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2010-12-02</td>
+<td align="right">60</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2011-05-31</td>
+<td align="right">30</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2011-06-30</td>
+<td align="right">90</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2011-12-27</td>
+<td align="right">180</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="left">2012-03-26</td>
+<td align="right">180</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">2011-05-31</td>
+<td align="right">60</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">2011-06-30</td>
+<td align="right">90</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="right">1</td>
+<td align="left">2011-12-27</td>
+<td align="right">30</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="left">2011-06-30</td>
+<td align="right">90</td>
+<td align="left">2011-01-06</td>
+<td align="left">2012-05-01</td>
+<td align="left">2009-11-07</td>
+<td align="left">2013-06-01</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="cma1">CMA1<a class="anchor" aria-label="anchor" href="#cma1"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">CMA1</span>, show.legend <span class="op">=</span> <span class="cn">TRUE</span>, align.all.patients <span class="op">=</span> <span class="cn">FALSE</span>, align.first.event.at.zero <span class="op">=</span> <span class="cn">TRUE</span>, period.in.days <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in plot.window(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.first.event.at.zero" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.all.patients" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.first.event.at.zero" is not a</span></span>
-<span><span class="co">## graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "period.in.days" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
+<p>Medication availability based on days supplied (excluding last
+event)</p>
+<ul>
+<li>Events that start before observation window are not included</li>
+</ul>
+<!-- --><ul>
+<li><p>Requires ≥2 events</p></li>
+<li><p>Computes: <strong>sum(days_supply values except last) / (days
+between first and last event)</strong></p></li>
+</ul>
 <p><img src="a04-adherence_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># comments from code</span></span>
-<span><span class="co"># # For less than two events or when the first and the last events are on the same day, CMA1 does not make sense</span></span>
-<span><span class="co"># # Otherwise, the sum of durations of the events excluding the last divided by the number of days between the first and the last event</span></span>
-<span><span class="co"># ülemine:  (60+90) / 210</span></span>
-<span><span class="co"># all: (30+90+180) / 300</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cma2">CMA2<a class="anchor" aria-label="anchor" href="#cma2"></a>
 </h2>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">CMA2</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span>, align.all.patients <span class="op">=</span> <span class="cn">FALSE</span>, align.first.event.at.zero <span class="op">=</span> <span class="cn">TRUE</span>, period.in.days <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in plot.window(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.first.event.at.zero" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.all.patients" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.first.event.at.zero" is not a</span></span>
-<span><span class="co">## graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "period.in.days" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
+<p>Medication availability including the last event, but using
+observation window end</p>
+<ul>
+<li>Events that start before observation window are not included</li>
+</ul>
+<!-- --><ul>
+<li>Computes: <strong>sum(all days_supply values) / (time from first
+event → observation window end)</strong>
+</li>
+</ul>
 <p><img src="a04-adherence_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># (numberof dayssupplyincludinglastevent)/(firsttolastevent) &lt;- dokumentatsiooni kirjeldus </span></span>
-<span><span class="co"># Comments from code: </span></span>
-<span><span class="co"># For less than one event or when the first event is on the last day of the observation window, CMA2 does not make sense </span></span>
-<span><span class="co"># Otherwise, the sum of durations of the events divided by the number of days between the first event and the end of the observation window &lt;- imo dokumentatsioon on eksitav        </span></span>
-<span><span class="co"># 60 + 90 + 30 / 336</span></span>
-<span><span class="co"># 30 + 90 + 180 + 180 / 336 </span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cma-3-4">CMA 3 &amp; 4<a class="anchor" aria-label="anchor" href="#cma-3-4"></a>
 </h2>
-<p>same as 1 &amp; 2 only to be capped at 100%</p>
+<p>Same formulas as CMA1 and CMA2, but capped at 100%.</p>
 </div>
 <div class="section level2">
 <h2 id="cma-5">CMA 5<a class="anchor" aria-label="anchor" href="#cma-5"></a>
 </h2>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">CMA5</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span>, align.all.patients <span class="op">=</span> <span class="cn">FALSE</span>, align.first.event.at.zero <span class="op">=</span> <span class="cn">TRUE</span>, period.in.days <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in plot.window(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.first.event.at.zero" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.all.patients" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.first.event.at.zero" is not a</span></span>
-<span><span class="co">## graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "period.in.days" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
+<p>Proportion of gap days relative to time between first and last event.
+Equivalent to 1 – CMA1 but computed using theoretical use and
+accumulated gap time.</p>
+<ul>
+<li><p>Requires ≥2 events</p></li>
+<li><p>Events that start before observation window are not
+included</p></li>
+<li>
+<p>Computes: <strong>(number of days of theoretical use) / (days
+between first and last event)</strong></p>
+<ul>
+<li>Theoretical use for sample patient number 1: 30 + 90 + 90. The start
+of the last event cuts off the length of the second from last event. In
+CMA1 the second from last event is included entirely.</li>
+</ul>
+</li>
+</ul>
 <p><img src="a04-adherence_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
-<div class="sourceCode" id="cb81"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># (numberof daysof theoreticaluse)/(f irsttolastevent)</span></span>
-<span><span class="co"># comment from code: # Otherwise, the sum of durations of the events excluding the last divided by the number of days between the first and the last event </span></span>
-<span><span class="co"># arvesse võetakse gap days mis jäävad alles kui arvestada ravimite küllusega </span></span>
-<span><span class="co"># gap days esimesest sündmusest viimase alguseni ja lahuta days supplyd (va viimane)</span></span>
-<span><span class="co"># Esimesel: </span></span>
-<span><span class="co"># 1 - (60) / 210  </span></span>
-<span><span class="co"># Teisel</span></span>
-<span><span class="co"># 1 - (90) / 300</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="cma6">CMA6<a class="anchor" aria-label="anchor" href="#cma6"></a>
 </h2>
-<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># # Esimesel: </span></span>
-<span><span class="co"># 1 - (60 + 96) / 336  </span></span>
-<span><span class="co"># Teisel</span></span>
-<span><span class="co"># 1 - (90) / 336</span></span>
-<span><span class="co"># (numberof daysof theoreticaluse)/(firsteventtoendofobservationwindow)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">CMA6</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span>, align.all.patients <span class="op">=</span> <span class="cn">FALSE</span>, align.first.event.at.zero <span class="op">=</span> <span class="cn">TRUE</span>, period.in.days <span class="op">=</span> <span class="fl">60</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in plot.window(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "align.first.event.at.zero" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.all.patients" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "align.first.event.at.zero" is not a</span></span>
-<span><span class="co">## graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "period.in.days" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...):</span></span>
-<span><span class="co">## "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.all.patients" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "align.first.event.at.zero" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
+<p>Proportion of gap days relative to time between first and end of
+observation window. Equivalent to 1 – CMA2 but computed using
+theoretical use and accumulated gap time.</p>
+<ul>
+<li>Events that start before observation window are not included</li>
+</ul>
+<!-- --><ul>
+<li>
+<p>Computes: <strong>(number of days of theoretical use) / (days
+between first and last event)</strong></p>
+<ul>
+<li>Theoretical use for sample patient number 1: 30 + 90 + 90 + 36.</li>
+</ul>
+</li>
+</ul>
 <p><img src="a04-adherence_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
 </div>
 <div class="section level2">
 <h2 id="cma7">CMA7<a class="anchor" aria-label="anchor" href="#cma7"></a>
 </h2>
-<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># 1- (145+60+96) / 481</span></span>
-<span><span class="co"># 1 - (120 + 90) / 481</span></span>
-<span><span class="co"># (numberof daysof theoreticaluse)/(starttoendof observationwindow)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">CMA7</span>, period.in.days <span class="op">=</span> <span class="fl">60</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in plot.window(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "period.in.days" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "show.legend" is not a graphical parameter</span></span></code></pre>
+<p>Gap-based measure using the full observation window start → end. No
+anchoring on first event. This measures adherence relative to the entire
+observation period.</p>
+<ul>
+<li>Includes events from before the observation period starts</li>
+</ul>
+<!-- --><ul>
+<li>
+<p>Computes: <strong>(number of days of theoretical use) / (number
+of days in observation window)</strong></p>
+<ul>
+<li>Theoretical use for sample patient number 1: 25 + 30 + 90 + 90 +
+36.</li>
+</ul>
+</li>
+</ul>
 <p><img src="a04-adherence_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 </div>
 <div class="section level2">
 <h2 id="cma8">CMA8<a class="anchor" aria-label="anchor" href="#cma8"></a>
 </h2>
-<div class="sourceCode" id="cb120"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># (numberof daysof theoreticaluse)/(laggedstarttoendof observationwindow</span></span>
-<span><span class="co"># 1- (145+60+96) / 481</span></span>
-<span><span class="co"># 1 - (120 + 90) / (481-25) &lt;- sisse tulev sündmus jääb välja</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">CMA8</span>,period.in.days <span class="op">=</span> <span class="fl">60</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in plot.window(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "period.in.days" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "show.legend" is not a graphical parameter</span></span></code></pre>
+<p>Lagged version of CMA7. The observation window starts after a short
+“lag” from the event that starts before the observation window. Useful
+when excluding an initial adjustment period.</p>
+<ul>
+<li>
+<p>Computes: <strong>(number of days of theoretical use) / (lagged
+start to end of observation window)</strong></p>
+<ul>
+<li>Number of days accounting for lagged start for patient 1: 481 -
+25.</li>
+</ul>
+</li>
+</ul>
 <p><img src="a04-adherence_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 </div>
 <div class="section level2">
 <h2 id="cma9">CMA9<a class="anchor" aria-label="anchor" href="#cma9"></a>
 </h2>
-<div class="sourceCode" id="cb133"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># number of days in the observation window, each weighted by the ratio</span></span>
-<span><span class="co"># of days supply applicable to their event interval) </span></span>
-<span><span class="co">#   /</span></span>
-<span><span class="co">#(start to end of observation window)</span></span>
-<span></span>
-<span><span class="co"># !take account the overlap with obs window!</span></span>
-<span><span class="co"># ((1 - 612/702) * 306) / 481</span></span>
-<span><span class="co"># ((1 - 0/30)*30 + (1 - 60/180)*180 + (1 - 492/522) * 126) / 481</span></span>
-<span><span class="co"># ((1 - 120/180)*145 + (1 - 0/30)*30 + (1 - 90/180)*180 + (1 - 0/90) * 90 + (1 - 162/432) * 36) / 481 </span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">results</span><span class="op">$</span><span class="va">CMA9</span>,period.in.days <span class="op">=</span> <span class="fl">60</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning in plot.window(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.window(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "period.in.days" is not a graphical</span></span>
-<span><span class="co">## parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in plot.xy(xy, type, ...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "period.in.days"</span></span>
-<span><span class="co">## is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in axis(side = side, at = at, labels = labels, ...): "show.legend" is</span></span>
-<span><span class="co">## not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in box(...): "show.legend" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "period.in.days" is not a graphical parameter</span></span></code></pre>
-<pre><code><span><span class="co">## Warning in title(...): "show.legend" is not a graphical parameter</span></span></code></pre>
+<p>Weighted daily adherence measure. This method evaluates, for every
+day, how much medication supply covers that day and averages across the
+entire window. Useful when event timing and overlaps matter
+substantially.</p>
+<ul>
+<li>
+<p>Computes <strong>(number of days in the observation window, each
+weighted by the ratio of days supply applicable to their event interval)
+/ (start to end of observation window)</strong></p>
+<ul>
+<li>
+<p>Patient 3: ((1 - 612/702) * 306) / 481</p>
+<ul>
+<li><p>612 number of gap days between the end of the first (and only)
+event and the end of the follow-up window.</p></li>
+<li><p>702 number of days between the start of the first event and the
+end of the follow-up window.</p></li>
+<li><p>306 number of days between the start of the first event and the
+end of the observation window.</p></li>
+<li><p>481 total length of the observation window.</p></li>
+</ul>
+</li>
+<li><p>Patient 2: ((1 - 0/30)30 + (1 - 60/180)180 + (1 - 492/522) * 126)
+/ 481</p></li>
+<li><p>Patient 1: ((1 - 120/180)145 + (1 - 0/30)30 + (1 - 90/180)180 +
+(1 - 0/90) 90 + (1 - 162/432) * 36) / 481</p></li>
+</ul>
+</li>
+</ul>
 <p><img src="a04-adherence_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
-<div class="sourceCode" id="cb146"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sample_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  person_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span>,</span>
-<span>  drug_concept_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span>,</span>
-<span>  drug_exposure_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2010-12-02"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-05-31"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-06-30"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-12-27"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2012-03-26"</span><span class="op">)</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-05-31"</span><span class="op">)</span>,<span class="co"># // other patient</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-06-30"</span><span class="op">)</span>, </span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-12-27"</span><span class="op">)</span>, <span class="co">#</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-06-30"</span><span class="op">)</span> <span class="co"># // last pt</span></span>
-<span>    <span class="co">#as.Date("2011-12-27")</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  days_supply <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">60</span>,<span class="fl">30</span>,<span class="fl">90</span>,<span class="fl">180</span>,<span class="fl">180</span>,<span class="fl">60</span>,<span class="fl">90</span>,<span class="fl">30</span>, <span class="fl">90</span><span class="op">)</span>,</span>
-<span>  cohort_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-01-06"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span>,</span>
-<span>  cohort_end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2012-05-01"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span>,</span>
-<span>  observation_period_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2009-11-07"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span>,</span>
-<span>  observation_period_end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2013-06-01"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">9</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb147"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sample_data_gpt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  person_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span>,</span>
-<span>  drug_concept_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span>,</span>
-<span>  drug_exposure_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-06-30"</span><span class="op">)</span> </span>
-<span>  <span class="op">)</span>,</span>
-<span>  days_supply <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span>,</span>
-<span>  observation_window_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2011-01-06"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">1</span><span class="op">)</span>,</span>
-<span>  observation_window_end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2012-05-01"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">1</span><span class="op">)</span>,</span>
-<span>  follow_up_period_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2009-11-07"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">1</span><span class="op">)</span>,</span>
-<span>  follow_up_period_end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2013-06-01"</span><span class="op">)</span><span class="op">)</span>,times<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
 </div>
-  </div>
-
-  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
-
-      </div>
-
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 
 
-      <footer><div class="copyright">
-  <p></p>
-<p>Developed by Johannes Holm, Greete Kelli Aava.</p>
+    <footer><div class="pkgdown-footer-left">
+  <p>Developed by Johannes Holm, Greete Kelli Aava.</p>
 </div>
 
-<div class="pkgdown">
-  <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+<div class="pkgdown-footer-right">
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
-      </footer>
+    </footer>
 </div>
-
 
 
 

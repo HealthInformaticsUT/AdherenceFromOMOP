@@ -5,10 +5,14 @@
 <url><loc>/articles/a02-generate-data.html</loc></url>
 <url><loc>/articles/a03-calculating-adherence.html</loc></url>
 <url><loc>/articles/a04-adherence.html</loc></url>
+<url><loc>/articles/a05-examples.html</loc></url>
 <url><loc>/articles/adherenceFromOMOP.html</loc></url>
 <url><loc>/articles/index.html</loc></url>
 <url><loc>/authors.html</loc></url>
 <url><loc>/index.html</loc></url>
+<url><loc>/reference/addBMI.html</loc></url>
+<url><loc>/reference/addCohorts.html</loc></url>
+<url><loc>/reference/addPatientInformation.html</loc></url>
 <url><loc>/reference/add_info_to_adherence.html</loc></url>
 <url><loc>/reference/adherenceCalculations.html</loc></url>
 <url><loc>/reference/adherenceCalculationsLoader.html</loc></url>
@@ -18,9 +22,11 @@
 <url><loc>/reference/adherence_dashboard.html</loc></url>
 <url><loc>/reference/adherence_dashboard_summarized.html</loc></url>
 <url><loc>/reference/adherence_summary.html</loc></url>
+<url><loc>/reference/countPeople.html</loc></url>
 <url><loc>/reference/generateChronicDrugExposure.html</loc></url>
 <url><loc>/reference/generateIngredientSet.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/loadData.html</loc></url>
 <url><loc>/reference/mockAdherenceFromOMOP.html</loc></url>
 </urlset>
 

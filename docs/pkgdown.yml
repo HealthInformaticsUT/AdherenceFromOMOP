@@ -1,10 +1,10 @@
-pandoc: '3.4'
-pkgdown: 2.1.0
+pandoc: 3.6.3
+pkgdown: 2.1.3
 pkgdown_sha: ~
 articles:
   a01-getting-started: a01-getting-started.html
   a02-generate-data: a02-generate-data.html
   a03-calculating-adherence: a03-calculating-adherence.html
   a04-adherence: a04-adherence.html
-  adherenceFromOMOP: adherenceFromOMOP.html
-last_built: 2025-09-12T13:32Z
+  a05-examples: a05-examples.html
+last_built: 2025-12-05T11:58Z
