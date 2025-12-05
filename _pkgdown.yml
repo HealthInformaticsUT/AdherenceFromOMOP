@@ -28,7 +28,7 @@ reference:
   - loadData
   - addPatientInformation
 - subtitle: Population stats
-  desc: View statistics? praegu ainult count
+  desc: View statistics
 - contents:
   - countPeople
 - subtitle: Mockdata generation
