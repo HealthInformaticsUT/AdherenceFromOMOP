@@ -4,7 +4,7 @@
 \alias{loadData}
 \title{Loads data, performs basic checks and mutates columns. User does not call this function directly.}
 \usage{
-loadData(cdm, name, data)
+loadData(cdm, name, data, delayObservationWindowStart = FALSE)
 }
 \arguments{
 \item{cdm}{a cdm_reference object}
@@ -12,6 +12,8 @@ loadData(cdm, name, data)
 \item{name}{name of the table in database that contains output of generateChronicDrugExposure}
 
 \item{data}{in-memory dataframe}
+
+\item{delayObservationWindowStart}{boolean value. Delays the beginning of adhereR observation window. Useful when calculating adherence with sliding window approach.}
 }
 \value{
 verified dataframe in a suitable format

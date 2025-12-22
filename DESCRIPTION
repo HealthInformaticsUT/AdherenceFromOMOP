@@ -40,3 +40,5 @@ Suggests:
 VignetteBuilder:
     knitr
 Config/testthat/edition: 3
+URL: https://healthinformaticsut.github.io/AdherenceFromOMOP/index.html, https://github.com/HealthInformaticsUT/AdherenceFromOMOP, 
+BugReports: https://github.com/HealthInformaticsUT/AdherenceFromOMOP/issues

@@ -25,13 +25,14 @@ reference:
 - contents:
   - addCohorts
   - addBMI
-  - loadData
-  - addPatientInformation
 - subtitle: Population stats
   desc: View statistics
 - contents:
   - countPeople
 - subtitle: Mockdata generation
-  desc: Testing package and demos
+  desc: Testing package, demos, internal functions
 - contents:
   - mockAdherenceFromOMOP
+  - cleanNARows
+  - addPatientInformation
+  - loadData

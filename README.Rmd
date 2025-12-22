@@ -14,7 +14,6 @@ knitr::opts_chunk$set(
 # Adherence from OMOP
 
 
-
 ## Overview
 
 Adherence is a concept that indicates how well does the patient follow the healthcare provider's recommendation. Medication adherence specifically shows if the patient follows their medication regimen or are there any gaps. 
@@ -33,6 +32,68 @@ AdherenceFromOMOP contains functions to measure chronic medication adherence usi
 - add cohort features as columns to data returned by adherence functions
 
 - view the number of people in areas of interest
+
+
+## Getting started with the basics
+
+### Install package
+
+```{r, eval=FALSE}
+devtools::install_github("https://github.com/HealthInformaticsUT/AdherenceFromOMOP/")
+library(AdherenceFromOMOP)
+```
+
+### Database connection with CDMConnector
+
+AdherenceFromOMOP relies on CDMConnector for database connection and other options are currently unavailable.
+
+```{r, eval = FALSE}
+readRenviron("~/.Renviron")
+
+writePrefix <- "adherencefromomop_"
+
+db <- DBI::dbConnect(
+  RPostgres::Postgres(),
+  dbname = Sys.getenv("DB_NAME"),
+  host = Sys.getenv("DB_HOST"),
+  user = Sys.getenv("DB_USERNAME"),
+  password = Sys.getenv("DB_PASSWORD"),
+  port = Sys.getenv("DB_PORT")
+)
+
+cdm <- CDMConnector::cdmFromCon(
+  con = db,
+  cdmSchema = Sys.getenv("OHDSI_CDM"),
+  writeSchema = Sys.getenv("OHDSI_WRITE"),
+  writePrefix = writePrefix
+)
+```
+
+### Calculating adherence
+
+Using adherenceFromOMOP involves two main steps. First, the required data must be retrieved and written to a designated table in the database.
+
+To extract the necessary data, use generateChronicDrugExposure. For drugConceptIdList input variable, which expects drug_concept_id values in a list, it is recommended to use [CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
+
+```{r, eval = FALSE, echo=TRUE, message = FALSE}
+# recommended method for acquiring drug_concept_id values
+drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"))
+concepts_ids <- unlist(drugIngredientCodes, use.names = F)
+
+# Step 1 - data generation
+chronicDrugExposure <- generateChronicDrugExposure(
+  cdm = cdm,
+  drugConceptIdList = concepts_ids,
+  name = "chronic_drug_exposure_table",
+  overwrite = T
+)
+
+chronicDrugExposure
+```
+
+```{r, eval = FALSE}
+adherence <- adherenceCalculations(data = chronicDrugExposure, cdm, cma = c("CMA5"))
+```
 
 
 

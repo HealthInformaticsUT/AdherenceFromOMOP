@@ -19,5 +19,5 @@ utils::globalVariables(c(
   "bmi_category", "drug_exposure_start_date", "observation_period_duration",
   "concept_class_id", "observation_period_start_date",
   "observation_period_end_date", "year", "n", "has_min_purchases",
-  "purchase_count"
+  "purchase_count", "CMA", "nonNASeries", "window.ID"
 ))

@@ -45,6 +45,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/HealthInformaticsUT/AdherenceFromOMOP/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
@@ -69,7 +70,7 @@
       <h1>Getting Started</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/HealthInformaticsUT/AdherenceFromOMOP/blob/HEAD/vignettes/a01-getting-started.Rmd" class="external-link"><code>vignettes/a01-getting-started.Rmd</code></a></small>
       <div class="d-none name"><code>a01-getting-started.Rmd</code></div>
     </div>
 
@@ -79,24 +80,71 @@
 <h2 id="getting-started-with-the-basics">Getting started with the basics<a class="anchor" aria-label="anchor" href="#getting-started-with-the-basics"></a>
 </h2>
 <div class="section level3">
+<h3 id="database-connection-with-cdmconnector">Database connection with CDMConnector<a class="anchor" aria-label="anchor" href="#database-connection-with-cdmconnector"></a>
+</h3>
+<p>AdherenceFromOMOP relies on CDMConnector for database connection and
+other options are currently unavailable.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"https://github.com/HealthInformaticsUT/AdherenceFromOMOP/"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/readRenviron.html" class="external-link">readRenviron</a></span><span class="op">(</span><span class="st">"~/.Renviron"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">writePrefix</span> <span class="op">&lt;-</span> <span class="st">"adherencefromomop_"</span></span>
+<span></span>
+<span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span></span>
+<span>  <span class="fu">RPostgres</span><span class="fu">::</span><span class="fu"><a href="https://rpostgres.r-dbi.org/reference/Postgres.html" class="external-link">Postgres</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  dbname <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"DB_NAME"</span><span class="op">)</span>,</span>
+<span>  host <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"DB_HOST"</span><span class="op">)</span>,</span>
+<span>  user <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"DB_USERNAME"</span><span class="op">)</span>,</span>
+<span>  password <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"DB_PASSWORD"</span><span class="op">)</span>,</span>
+<span>  port <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"DB_PORT"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cdm</span> <span class="op">&lt;-</span> <span class="fu">CDMConnector</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CDMConnector/reference/cdmFromCon.html" class="external-link">cdmFromCon</a></span><span class="op">(</span></span>
+<span>  con <span class="op">=</span> <span class="va">db</span>,</span>
+<span>  cdmSchema <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"OHDSI_CDM"</span><span class="op">)</span>,</span>
+<span>  writeSchema <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"OHDSI_WRITE"</span><span class="op">)</span>,</span>
+<span>  writePrefix <span class="op">=</span> <span class="va">writePrefix</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="calculating-adherence">Calculating adherence<a class="anchor" aria-label="anchor" href="#calculating-adherence"></a>
 </h3>
 <p>Using adherenceFromOMOP involves two main steps. First, the required
 data must be retrieved and written to a designated table in the
 database.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Step 0 - cdm connection</span></span>
+<span><span class="co"># for demos mock dataset is recommended</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://healthinformaticsut.github.io/AdherenceFromOMOP/index.html">AdherenceFromOMOP</a></span><span class="op">)</span></span>
+<span><span class="va">cdm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mockAdherenceFromOMOP.html">mockAdherenceFromOMOP</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>To extract the necessary data, use generateChronicDrugExposure. For
 drugConceptIdList input variable, which expects drug_concept_id values
 in a list, it is recommended to use <a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">CodelistGenerator</a>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># recommended method for acquiring drug_concept_id values</span></span>
+<span><span class="va">drugIngredientCodes</span> <span class="op">&lt;-</span> <span class="fu">CodelistGenerator</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a></span><span class="op">(</span>cdm <span class="op">=</span> <span class="va">cdm</span>, name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">42899580</span>, <span class="fl">37498042</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">concepts_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">drugIngredientCodes</span>, use.names <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Step 1 - data generation</span></span>
+<span><span class="va">chronicDrugExposure</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generateChronicDrugExposure.html">generateChronicDrugExposure</a></span><span class="op">(</span></span>
+<span>  cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
+<span>  <span class="co"># drugConceptIdList = concepts_ids,</span></span>
+<span>  name <span class="op">=</span> <span class="st">"drug_exposure_demo"</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">T</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">chronicDrugExposure</span></span></code></pre></div>
 <p>Medication groups can be defined to calculate adherence by
 therapeutic category. Here, we reuse the earlier drugIngredientCodes
 object. To compute adherence, for large datasets use the loader
 functions.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/adherenceCalculationsLoader.html">adherenceCalculationsLoader</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">adherence</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceCalculationsLoader.html">adherenceCalculationsLoader</a></span><span class="op">(</span></span>
 <span>  reference <span class="op">=</span> <span class="va">chronicDrugExposure</span>,</span>
 <span>  cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
 <span>  medicationGroup <span class="op">=</span> <span class="va">drugIngredientCodes</span>,</span>
-<span>  resultsTableName <span class="op">=</span> <span class="st">"name_of_table_that_contains_cma"</span>,</span>
+<span>  resultsTableName <span class="op">=</span> <span class="st">"basic_adherence"</span>,</span>
 <span>  cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>    <span class="st">"CMA3"</span></span>
 <span>  <span class="op">)</span></span>
@@ -110,22 +158,28 @@ overall observation period.</p>
 <div class="section level4">
 <h4 id="adding-bmi-values">Adding BMI values<a class="anchor" aria-label="anchor" href="#adding-bmi-values"></a>
 </h4>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addBMI.html">addBMI</a></span><span class="op">(</span><span class="va">CMA_sliding_window_for_each_patient</span>, <span class="va">cdm</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># demo data show only NA for avg_bmi</span></span>
+<span><span class="va">cma_with_bmi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addBMI.html">addBMI</a></span><span class="op">(</span><span class="va">adherence</span>, <span class="va">cdm</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="adding-cohort-membership-as-columns">Adding cohort membership as columns<a class="anchor" aria-label="anchor" href="#adding-cohort-membership-as-columns"></a>
 </h4>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># when using notebook this command has to be copied to the console</span></span>
-<span><span class="va">pathToCohorts</span> <span class="op">&lt;-</span> <span class="st">"./inst/"</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pathToCohorts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>,<span class="st">"/inst/"</span><span class="op">)</span> <span class="co"># path to cohorts </span></span>
 <span></span>
 <span><span class="va">cohortSet</span> <span class="op">&lt;-</span> <span class="fu">CDMConnector</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CDMConnector/reference/readCohortSet.html" class="external-link">readCohortSet</a></span><span class="op">(</span><span class="va">pathToCohorts</span><span class="op">)</span></span>
 <span><span class="va">cdm</span> <span class="op">&lt;-</span> <span class="fu">CDMConnector</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CDMConnector/reference/generateCohortSet.html" class="external-link">generateCohortSet</a></span><span class="op">(</span><span class="va">cdm</span>, <span class="va">cohortSet</span>, name <span class="op">=</span> <span class="st">"cohort"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cohort</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="va">cdm</span><span class="op">$</span><span class="va">cohort</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/addCohorts.html">addCohorts</a></span><span class="op">(</span><span class="va">CMA_sliding_window_for_each_patient</span>, <span class="va">cohort</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">adherence_with_cohorts_as_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addCohorts.html">addCohorts</a></span><span class="op">(</span><span class="va">adherence</span>, <span class="va">cohort</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="number-of-people-in-cohort">Number of people in cohort<a class="anchor" aria-label="anchor" href="#number-of-people-in-cohort"></a>
+</h4>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/countPeople.html">countPeople</a></span><span class="op">(</span>cdm <span class="op">=</span> <span class="va">cdm</span>, generatedTable <span class="op">=</span> <span class="va">chronicDrugExposure</span>, cmaTable <span class="op">=</span> <span class="va">adherence</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 </div>

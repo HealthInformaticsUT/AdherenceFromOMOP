@@ -45,6 +45,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/HealthInformaticsUT/AdherenceFromOMOP/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
@@ -69,7 +70,7 @@
       <h1>Example use cases with statins</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/HealthInformaticsUT/AdherenceFromOMOP/blob/HEAD/vignettes/a05-examples.Rmd" class="external-link"><code>vignettes/a05-examples.Rmd</code></a></small>
       <div class="d-none name"><code>a05-examples.Rmd</code></div>
     </div>
 
@@ -210,8 +211,17 @@ variable. It is recommended to use CDMConnector for generating this.</p>
 <span><span class="va">cohortTable</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="va">cdm</span><span class="op">$</span><span class="va">cohort</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cma_values_with_cohort_features</span> <span class="op">&lt;-</span> <span class="fu">addCohort</span><span class="op">(</span><span class="va">adherenceCMA5</span>, <span class="va">cohortTable</span><span class="op">)</span></span></code></pre></div>
+<p>Adding body mass index is a separate function.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cma_data_with_bmi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addBMI.html">addBMI</a></span><span class="op">(</span><span class="va">adherenceCMA5</span>, <span class="va">cdm</span><span class="op">)</span></span></code></pre></div>
+<p>To get an overview this function reports the number of individuals in
+three groups: (1) individuals included in the cohort,</p>
+<ol start="2" style="list-style-type: decimal">
+<li><p>individuals with calculated adherence values,</p></li>
+<li><p>individuals who have at least <em>n</em> drug exposure records
+within a given calendar year, calculated from the generated drug
+exposure table.</p></li>
+</ol>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/countPeople.html">countPeople</a></span><span class="op">(</span>cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
 <span>                        cmaTable <span class="op">=</span> <span class="va">adherenceCMA5</span>,</span>

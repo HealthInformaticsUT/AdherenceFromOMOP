@@ -45,6 +45,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/HealthInformaticsUT/AdherenceFromOMOP/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
@@ -69,7 +70,7 @@
       <h1>Calculating Adherence</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/HealthInformaticsUT/AdherenceFromOMOP/blob/HEAD/vignettes/a03-calculating-adherence.Rmd" class="external-link"><code>vignettes/a03-calculating-adherence.Rmd</code></a></small>
       <div class="d-none name"><code>a03-calculating-adherence.Rmd</code></div>
     </div>
 
@@ -84,13 +85,13 @@
 <strong>1–9</strong>. For examples illustrating the behavior of
 different CMA types, see the <a href="#id_0" style="font-size: 11pt;">Intro to CMA</a> tutorial. In this package
 adherenceSlidingWindow and adherenceCalculations are wrappers for
-functions in <a href="#id_0" style="font-size: 11pt;" title="link to package">Adherer</a> package.</p>
+functions in <a href="#id_0" style="font-size: 11pt;" title="link to package">AdhereR</a> package.</p>
 <p>For more detailed guidance, refer to the <a href="https://cran.r-project.org/web/packages/AdhereR/AdhereR.pdf" title="link to cran" class="external-link">AdhereR documentation</a>.</p>
 <p>For large datasets, it is recommended to use
 <code>adherenceSlidingWindowLoader</code> and
 <code>adherenceCalculationsLoader</code>, which load data in chunks and
 write results directly to the database.</p>
-<p>In <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426" class="external-link">Adherer</a>
+<p>In <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426" class="external-link">AdhereR</a>
 software the follow-up window is the total period for which relevant
 medication events are recorded for patients, while the observation
 window is the period within the follow-up window over which adherence is
@@ -99,12 +100,15 @@ actually computed.</p>
 depending on whether <a href="a02-generate-data.html">cohorts</a> are
 used during data generation:</p>
 <ul>
-<li><strong>When cohorts are present:</strong></li>
-</ul>
-<pre><code>-   *Cohort start/end dates* define the **AdhereR observation window**.
-
--   *Observation period start/end dates* define the **AdhereR follow-up window**.</code></pre>
+<li>
+<p><strong>When cohorts are present:</strong></p>
 <ul>
+<li><p><em>Cohort start/end dates</em> define the <strong>AdhereR
+observation window</strong>.</p></li>
+<li><p><em>Observation period start/end dates</em> define the
+<strong>AdhereR follow-up window</strong>.</p></li>
+</ul>
+</li>
 <li>
 <p><strong>When cohorts are not used:</strong></p>
 <ul>
@@ -113,25 +117,6 @@ used during data generation:</p>
 </ul>
 </li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="general-medication-adherence">General medication adherence<a class="anchor" aria-label="anchor" href="#general-medication-adherence"></a>
-</h2>
-<p>This is used for calculating adherence throughout subjects
-observation period.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceCalculationsLoader.html">adherenceCalculationsLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_results_table_name"</span>, batchSize <span class="op">=</span> <span class="fl">1000</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA9"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">results</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="medication-adherence-with-sliding-window">Medication adherence with sliding window<a class="anchor" aria-label="anchor" href="#medication-adherence-with-sliding-window"></a>
-</h2>
-<p>This approach computes adherence over a series of sliding windows
-within the observation period, allowing adherence to be examined over
-time.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_results_table_name"</span>, batchSize <span class="op">=</span> <span class="fl">1000</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">results</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="medication-groups">Medication groups<a class="anchor" aria-label="anchor" href="#medication-groups"></a>
@@ -146,10 +131,10 @@ If medications overlap across groups, CMA values are unaffected (no data
 is omitted). For more details, see the <code>medication.groups</code>
 documentation in <strong>AdhereR</strong>.</p>
 <p>Below is an example of manually creating medication groups:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">medicationGroup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>   <span class="co"># vectors of drug_concept_ids</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1361364</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1830280</span><span class="op">)</span>   <span class="co"># vectors of drug_concept_ids</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">groupNames</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group1"</span>, <span class="st">"group2"</span><span class="op">)</span></span>
 <span></span>
@@ -157,6 +142,34 @@ documentation in <strong>AdhereR</strong>.</p>
 <span></span>
 <span><span class="co"># Optional: wrap for improved display</span></span>
 <span><span class="va">medicationGroup</span> <span class="op">&lt;-</span> <span class="fu">omopgenerics</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/omopgenerics/reference/newCodelist.html" class="external-link">newCodelist</a></span><span class="op">(</span><span class="va">medicationGroup</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="general-medication-adherence">General medication adherence<a class="anchor" aria-label="anchor" href="#general-medication-adherence"></a>
+</h2>
+<p>This is used for calculating adherence throughout subjects
+observation period.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceCalculationsLoader.html">adherenceCalculationsLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_cma5"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, medicationGroup <span class="op">=</span> <span class="va">medicationGroup</span><span class="op">)</span></span>
+<span><span class="va">results</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="medication-adherence-with-sliding-window">Medication adherence with sliding window<a class="anchor" aria-label="anchor" href="#medication-adherence-with-sliding-window"></a>
+</h2>
+<p>This approach computes adherence over a series of sliding windows
+within the observation period, allowing adherence to be examined over
+time. Unlike the AdhereR function output, window.ID values are not
+unique across all records for a given patient. They are assigned
+sequentially within each contiguous period without NA values and reset
+after gaps.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, delayObservationWindowStart <span class="op">=</span> <span class="cn">FALSE</span>, medicationGroup <span class="op">=</span> <span class="va">medicationGroup</span><span class="op">)</span></span>
+<span><span class="va">results</span></span></code></pre></div>
+<p>Setting <code>delayObservationWindowStart = TRUE</code> delays the
+start of the sliding-window sequence until the first prescription is
+dispensed.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">results_delayed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw_delayed"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, delayObservationWindowStart <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">results</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

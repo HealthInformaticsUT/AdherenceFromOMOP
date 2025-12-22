@@ -43,6 +43,11 @@ adherenceSlidingWindowLoader <- function(reference,
   nameWithPrefix <- paste0(writeSchema[[2]], resultsTableName)
   connection <- CDMConnector::cdmCon(cdm)
 
+  if (nameWithPrefix %in% DBI::dbListTables(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix))){
+    cli::cli_alert_info(paste("Table", nameWithPrefix, "already exists!"))
+    return( NULL )
+  }
+
   for (i in seq_along(batches)) {
     cli::cli_alert_info(paste("Working with batch", names(batches)[i], "out of", length(batches)))
 
@@ -122,6 +127,7 @@ adherenceSlidingWindow <- function(cdm = NULL,
                                    ),
                                    name = NULL,
                                    medicationGroup = NULL,
+                                   delayObservationWindowStart = FALSE,
                                    ...) {
   if (!all(cma %in% c(
     "CMA1",
@@ -138,7 +144,7 @@ adherenceSlidingWindow <- function(cdm = NULL,
     return(NULL)
   }
 
-  df <- loadData(cdm, name, data)
+  df <- loadData(cdm, name, data, delayObservationWindowStart)
 
   if (is.null(df)) {
     return(NULL)
@@ -190,6 +196,8 @@ adherenceSlidingWindow <- function(cdm = NULL,
   }
 
   cma_values <- dplyr::bind_rows(computedCMAs, .id = "name")
+
+  cma_values <- cleanNARows(cma_values)
 
   result <- addPatientInformation(data = df, cma_values = cma_values)
 
@@ -246,6 +254,11 @@ adherenceCalculationsLoader <- function(reference,
   writeSchema <- CDMConnector::cdmWriteSchema(cdm)
   nameWithPrefix <- paste0(writeSchema[[2]], resultsTableName)
   connection <- CDMConnector::cdmCon(cdm)
+
+  if (nameWithPrefix %in% DBI::dbListTables(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix))){
+    cli::cli_alert_info(paste("Table", nameWithPrefix, "already exists!"))
+    return( NULL )
+  }
 
   for (i in seq_along(batches)) {
     cli::cli_alert_info(paste("Working with batch", names(batches)[i], "out of", length(batches)))
@@ -329,6 +342,7 @@ adherenceCalculations <- function(cdm = NULL,
                                   ),
                                   name = NULL,
                                   medicationGroup = NULL,
+                                  delayObservationWindowStart = FALSE,
                                   ...) {
   if (!all(cma %in% c(
     "CMA1",
@@ -345,7 +359,7 @@ adherenceCalculations <- function(cdm = NULL,
     return(NULL)
   }
 
-  df <- loadData(cdm, name, data)
+  df <- loadData(cdm, name, data, delayObservationWindowStart)
   if (is.null(df)) {
     return(NULL)
   }
@@ -398,6 +412,8 @@ adherenceCalculations <- function(cdm = NULL,
 
   cma_values <- dplyr::bind_rows(computedCMAs, .id = "name")
 
+  cma_values <- cleanNARows(cma_values)
+
   result <- addPatientInformation(data = df, cma_values = cma_values)
 
   return(result)
@@ -443,11 +459,12 @@ addPatientInformation <- function(data, cma_values) {
 #' @param cdm a cdm_reference object
 #' @param name name of the table in database that contains output of generateChronicDrugExposure
 #' @param data in-memory dataframe
+#' @param delayObservationWindowStart boolean value. Delays the beginning of adhereR observation window. Useful when calculating adherence with sliding window approach.
 #'
 #' @returns verified dataframe in a suitable format
 #'
 #' @examples
-loadData <- function(cdm, name, data) {
+loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
   if (!is.null(cdm)) {
     if (is.null(name)) {
       cli::cli_alert_danger("Table name must be provided.")
@@ -459,7 +476,7 @@ loadData <- function(cdm, name, data) {
     }
     df <- DBI::dbReadTable(CDMConnector::cdmCon(cdm), name = name)
   } else if (!is.null(data)) {
-    df <- data
+    df <- dplyr::collect(data)
     name <- "(provided data)"
   } else {
     cli::cli_alert_danger("No data provided.")
@@ -488,30 +505,96 @@ loadData <- function(cdm, name, data) {
   }
 
   if (all(c("cohort_start_date", "cohort_end_date") %in% colnames(df))) {
-    df <- df %>%
-      dplyr::mutate(
-        observation_period_duration = as.integer(cohort_end_date - cohort_start_date),
-        followup_period_duration = as.numeric(
-          observation_period_end_date - observation_period_start_date
+    # cohort period as followup period
+    if (delayObservationWindowStart){
+      df <- df %>%
+        dplyr::group_by(person_id) %>%
+        dplyr::mutate(
+          observation_window_start = min(drug_exposure_start_date)
+        ) %>%
+        dplyr::mutate(
+          observation_period_duration = as.integer(cohort_end_date - observation_window_start),
+          followup_period_duration = as.numeric(
+            observation_period_end_date - observation_period_start_date
+          )
         )
-      ) %>%
-      dplyr::mutate(
-        observation_window_start = cohort_start_date
-      )
+      cli::cli_alert_info("Observation window start is delayed.")
+
+    } else{
+      # default
+      df <- df %>%
+        dplyr::mutate(
+          observation_period_duration = as.integer(cohort_end_date - cohort_start_date),
+          followup_period_duration = as.numeric(
+            observation_period_end_date - observation_period_start_date
+          )
+        ) %>%
+        dplyr::mutate(
+          observation_window_start = cohort_start_date
+        )
+    }
   } else {
-    df <- df %>%
-      dplyr::mutate(
-        observation_period_duration = as.integer(
-          observation_period_end_date - observation_period_start_date
-        ),
-        followup_period_duration = as.integer(
-          observation_period_end_date - observation_period_start_date
+    if (delayObservationWindowStart){
+      df <- df %>%
+        dplyr::group_by(person_id) %>%
+        dplyr::mutate(
+          observation_window_start = min(drug_exposure_start_date)
+        ) %>%
+        dplyr::mutate(
+          observation_period_duration = as.integer(
+            observation_period_end_date - observation_window_start
+          ),
+          followup_period_duration = as.integer(
+            observation_period_end_date - observation_period_start_date
+          )
         )
-      ) %>%
-      dplyr::mutate(
-        observation_window_start = observation_period_start_date
-      )
+      cli::cli_alert_info("Observation window start is delayed.")
+
+    } else {
+      df <- df %>%
+        dplyr::mutate(
+          observation_period_duration = as.integer(
+            observation_period_end_date - observation_period_start_date
+          ),
+          followup_period_duration = as.integer(
+            observation_period_end_date - observation_period_start_date
+          )
+        ) %>%
+        dplyr::mutate(
+          observation_window_start = observation_period_start_date
+        )
+    }
   }
 
   return(df)
+}
+
+#' cleanNARows
+#'
+#' User does not call this.
+#' @param data
+#'
+#' @returns
+#' \keyword{internal}
+cleanNARows <- function(data){
+  if ("window.ID" %in% colnames(data)){
+  # rows with NA CMA values are dropped and window.ID reset after NA rows
+  cleanedCMAData <- data %>%
+    dplyr::group_by(name, person_id, group) %>%
+    dplyr::mutate(
+      nonNASeries = cumsum(is.na(CMA) | dplyr::lag(is.na(CMA), default = TRUE)),
+      window.ID = ifelse(!is.na(CMA),window.ID,0)
+    ) %>%
+    dplyr::filter(!is.na(CMA)) %>%
+    dplyr::group_by(nonNASeries) %>%
+    dplyr::mutate(window.ID = 1:dplyr::n()) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(!nonNASeries)
+  } else {
+    cleanedCMAData <- data %>%
+      dplyr::filter(!is.na(CMA))
+  }
+
+
+  return(cleanedCMAData)
 }

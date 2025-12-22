@@ -138,19 +138,33 @@ addCohorts <- function(cmaTable, cohortTable, cohortIdMappingToNames = NULL) {
   } else {
     cma_with_cohort <- cohort %>%
       dplyr::mutate(cohort_name = cohort_definition_id) %>%
-      dplyr::group_by(subject_id, cohort_definition_id, cohort_name) %>%
-      dplyr::mutate(time_in_cohort = as.integer(cohort_end_date - cohort_start_date)) %>%
-      dplyr::summarise(time_in_cohort = sum(time_in_cohort)) %>%
-      dplyr::ungroup() %>%
-      dplyr::right_join(cmaTable, dplyr::join_by(y$person_id == x$subject_id)) %>%
+      dplyr::right_join(
+        cmaTable,
+        dplyr::join_by(
+          y$person_id == x$subject_id,
+          dplyr::overlaps(
+            x$cohort_start_date,
+            x$cohort_end_date,
+            y$observation_window_start,
+            y$observation_period_end_date
+          )
+        )
+      ) %>%
+      dplyr::mutate(
+        overlap_start = pmax(cohort_start_date, observation_window_start),
+        overlap_end = pmin(cohort_end_date, observation_period_end_date),
+        time_in_cohort = as.integer(pmax(
+          0, overlap_end - overlap_start + 1
+        ))
+      ) %>%
       dplyr::mutate(
         window.id = 1,
-        window.start = observation_period_start_date,
+        window.start = observation_window_start,
         window.end = observation_period_end_date,
       )
   }
 
-  if (is.na(all(unique(cma_with_cohort$cohort_definition_id)))){
+  if (all(is.na(unique(cma_with_cohort$cohort_definition_id)))){
     cli::cli_alert_info("Cohort time periods and time periods CMA is calculated for don't match.")
     return( NULL )
   }
@@ -224,6 +238,14 @@ countPeople <- function(cdm = NULL,
       dplyr::count() %>%
       dplyr::pull()
     result["Number of people CMA generated for"] <- as.integer(count)
+  }
+  if (!is.null(generatedTable)){
+    count <- generatedTable %>%
+      dplyr::select(person_id) %>%
+      dplyr::distinct() %>%
+      dplyr::count() %>%
+      dplyr::pull()
+    result["Number of people included"] <- as.integer(count)
   }
   if (!is.null(generatedTable)) {
     count_n_for_time_t <- generatedTable %>%

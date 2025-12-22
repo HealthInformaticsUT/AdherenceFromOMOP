@@ -10,6 +10,7 @@ adherenceCalculations(
   cma = c("CMA1", "CMA2", "CMA3", "CMA4", "CMA5", "CMA6", "CMA7", "CMA8", "CMA9"),
   name = NULL,
   medicationGroup = NULL,
+  delayObservationWindowStart = FALSE,
   ...
 )
 }

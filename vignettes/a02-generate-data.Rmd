@@ -7,13 +7,13 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-It is possible to calculate adherence without using generateChronicDrugExposure(). However guidelines are only provided for using it.
+It is possible to calculate adherence without using generateChronicDrugExposure(). However guidelines are only provided for using with it.
 
 ## Working with cohorts
 
 It is useful to restrict adherence calculations to only those individuals who belong to a specific cohort. AdherenceFromOMOP supports this directly through the `cohortSchema` and `cohortId` arguments in **generateChronicDrugExposure()**
 
-```{r, eval = FALSE, include = FALSE}
+```{r, eval = FALSE, include = TRUE}
 # preparation, no need to replicate
 cdm <- mockAdherenceFromOMOP()
 
@@ -29,9 +29,9 @@ DBI::dbWriteTable(conn = CDMConnector::cdmCon(cdm), name = DBI::Id(schema = "mai
 
 Only drug exposure events that satisfy the following conditions are included:
 
-1.   The person_id is included in the cohort, and
+1.  The person_id is included in the cohort, and
 
-2.   drug_exposure_start_date falls within the cohort start–end period
+2.  drug_exposure_start_date falls within the cohort start–end period
 
 ```{r, eval = FALSE}
 chronicDrugExposureCohort <- generateChronicDrugExposure(
@@ -46,3 +46,14 @@ chronicDrugExposureCohort <- generateChronicDrugExposure(
 ## Using drugConceptIdList variable
 
 You may optionally restrict the included drug exposure events to a specific list of **drug_concept_id** values using the `drugConceptIdList` argument. This list can be generated manually or, more conveniently, with **CodelistGenerator::getDrugIngredientCodes()**.
+
+```{r, eval= FALSE}
+ingredients <- c(...)
+medicationGroups <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm,
+                                                      name = ingredients,
+                                                      nameStyle = "{concept_code}")
+
+ingredientNames <- names(medicationGroups)
+drug_concept_id_lst <- unlist(medicationGroups, use.names = F)
+```
+

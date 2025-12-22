@@ -56,7 +56,6 @@ generateChronicDrugExposure <- function(cdm,
 
   data <- data %>%
     dplyr::left_join(cdm$concept, by = c("drug_concept_id" = "concept_id")) %>%
-    dplyr::filter(concept_class_id %like% "%Drug%") %>%
     dplyr::inner_join(cdm$observation_period, by = c("person_id")) %>%
     PatientProfiles::addDateOfBirth() %>%
     PatientProfiles::addSex() %>%

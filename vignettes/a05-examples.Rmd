@@ -152,9 +152,18 @@ cohortTable <- dplyr::collect(cdm$cohort)
 cma_values_with_cohort_features <- addCohort(adherenceCMA5, cohortTable)
 ```
 
+Adding body mass index is a separate function.
+
 ```{r, eval=FALSE}
 cma_data_with_bmi <- addBMI(adherenceCMA5, cdm)
 ```
+
+To get an overview this function reports the number of individuals in three groups:
+(1) individuals included in the cohort,
+
+(2) individuals with calculated adherence values,
+
+(3) individuals who have at least *n* drug exposure records within a given calendar year, calculated from the generated drug exposure table.
 
 ```{r, eval = FALSE}
 stats <- countPeople(cdm = cdm,

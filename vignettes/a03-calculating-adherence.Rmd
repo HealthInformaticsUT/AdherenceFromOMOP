@@ -9,17 +9,17 @@ vignette: >
 
 ## Overview
 
-Medication adherence calculations depend on the **CMA** (Continuous Medication Availability) measure selected. **AdherenceFromOMOP** supports CMA types **1–9**. For examples illustrating the behavior of different CMA types, see the [Intro to CMA](#0){style="font-size: 11pt;"} tutorial. In this package adherenceSlidingWindow and adherenceCalculations are wrappers for functions in [Adherer](#0 "link to package"){style="font-size: 11pt;"} package.
+Medication adherence calculations depend on the **CMA** (Continuous Medication Availability) measure selected. **AdherenceFromOMOP** supports CMA types **1–9**. For examples illustrating the behavior of different CMA types, see the [Intro to CMA](#0){style="font-size: 11pt;"} tutorial. In this package adherenceSlidingWindow and adherenceCalculations are wrappers for functions in [AdhereR](#0 "link to package"){style="font-size: 11pt;"} package.
 
 For more detailed guidance, refer to the [AdhereR documentation](https://cran.r-project.org/web/packages/AdhereR/AdhereR.pdf "link to cran").
 
 For large datasets, it is recommended to use `adherenceSlidingWindowLoader` and `adherenceCalculationsLoader`, which load data in chunks and write results directly to the database.
 
-In [Adherer](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426) software the follow-up window is the total period for which relevant medication events are recorded for patients, while the observation window is the period within the follow-up window over which adherence is actually computed.
+In [AdhereR](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426) software the follow-up window is the total period for which relevant medication events are recorded for patients, while the observation window is the period within the follow-up window over which adherence is actually computed.
 
 Within the OMOP framework, adherence can be computed in two ways, depending on whether [cohorts](a02-generate-data.html) are used during data generation:
 
--    **When cohorts are present:**
+-   **When cohorts are present:**
 
     -   *Cohort start/end dates* define the **AdhereR observation window**.
 
@@ -27,7 +27,27 @@ Within the OMOP framework, adherence can be computed in two ways, depending on w
 
 -   **When cohorts are not used:**
 
-    -    The *observation period start/end dates* define **both** the follow-up and observation windows.
+    -   The *observation period start/end dates* define **both** the follow-up and observation windows.
+
+## Medication groups
+
+By default, CMA values are calculated using all medication data available in the input dataset. To compute adherence for specific drug groups or to separate medications into categories, the `medicationGroups` argument can be supplied. This argument expects a *named list*. It is recommended to generate these lists using the **CodelistGenerator** package.\
+If medications overlap across groups, CMA values are unaffected (no data is omitted). For more details, see the `medication.groups` documentation in **AdhereR**.
+
+Below is an example of manually creating medication groups:
+
+```{r, eval = FALSE}
+medicationGroup <- list(
+  c(1361364),
+  c(1830280)   # vectors of drug_concept_ids
+)
+groupNames <- c("group1", "group2")
+
+names(medicationGroup) <- groupNames
+
+# Optional: wrap for improved display
+medicationGroup <- omopgenerics::newCodelist(medicationGroup)
+```
 
 ## General medication adherence
 
@@ -44,35 +64,32 @@ chronicDrugExposure <- generateChronicDrugExposure(
 ```
 
 ```{r, eval=FALSE, include = TRUE, message = FALSE}
-results <- adherenceCalculationsLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_results_table_name", batchSize = 1000, cma = c("CMA9"))
+results <- adherenceCalculationsLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_demo_cma5", cma = c("CMA5"), medicationGroup = medicationGroup)
 results
 ```
 
 ## Medication adherence with sliding window
 
-This approach computes adherence over a series of sliding windows within the observation period, allowing adherence to be examined over time.
+This approach computes adherence over a series of sliding windows within the observation period, allowing adherence to be examined over time. Unlike the AdhereR function output, window.ID values are not unique across all records for a given patient. They are assigned sequentially within each contiguous period without NA values and reset after gaps.
 
 ```{r, eval = FALSE, message = FALSE}
-results <- adherenceSlidingWindowLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_results_table_name", batchSize = 1000, cma = c("CMA5"))
+results <- adherenceSlidingWindowLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_demo_sw", cma = c("CMA5"), delayObservationWindowStart = FALSE, medicationGroup = medicationGroup)
 results
 ```
 
-## Medication groups
+Setting `delayObservationWindowStart = TRUE` delays the start of observation period used for adherence calculations, in this case the sliding-window sequence until the first prescription is dispensed.
 
-By default, CMA values are calculated using all medication data available in the input dataset. To compute adherence for specific drug groups or to separate medications into categories, the `medicationGroups` argument can be supplied. This argument expects a *named list*. It is recommended to generate these lists using the **CodelistGenerator** package.\
-If medications overlap across groups, CMA values are unaffected (no data is omitted). For more details, see the `medication.groups` documentation in **AdhereR**.
-
-Below is an example of manually creating medication groups:
-
-```{r, eval = FALSE, message=FALSE}
-medicationGroup <- list(
-  c(1, 2),
-  c(2, 3, 4)   # vectors of drug_concept_ids
+```{r, eval = FALSE}
+results_delayed <- adherenceSlidingWindowLoader(
+  chronicDrugExposure,
+  cdm,
+  resultsTableName = "AdherenceFromOMOP_demo_sw_delayed",
+  cma = c("CMA5"),
+  delayObservationWindowStart = TRUE,
+  sliding.window.duration = 1,
+  sliding.window.duration.unit = c("days", "weeks", "months", "years")[4],
+  sliding.window.step.duration = 1,
+  sliding.window.step.unit = c("days", "weeks", "months", "years")[4]
 )
-groupNames <- c("group1", "group2")
-
-names(medicationGroup) <- groupNames
-
-# Optional: wrap for improved display
-medicationGroup <- omopgenerics::newCodelist(medicationGroup)
+results_delayed
 ```

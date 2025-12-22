@@ -39,7 +39,7 @@ testthat::test_that("addCohorts testing",{
 
   withCohort <- addCohorts(CMA_values, cohortTable)
 
-  testthat::expect_true(is.null(withCohort))
+  testthat::expect_true(!is.null(withCohort))
 
 })
 
@@ -58,7 +58,7 @@ testthat::test_that("addCohorts testing",{
 
   withCohort <- addCohorts(CMA_values, cohortTable)
 
-  testthat::expect_true(is.null(withCohort))
+  testthat::expect_true(!is.null(withCohort))
 
 })
 

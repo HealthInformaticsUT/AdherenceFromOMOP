@@ -8,6 +8,15 @@
 \description{
 Adherence is a concept that indicates how well does the patient follow the healthcare provider's recommendation. Medication adherence specifically shows if the patient follows their medication regimen or are there any gaps. This is important for medications which are meant to be consumed for chronic diseases, where the effecacy of the treatment is closely correlated with the continuity of medication consumption. One possibility to measure adherence is secondary database analysis. OMOP common data model is a standardised model, which provides a clear structure for healthcare data. It is possible to use OMOP CDM drug_exposure data (which consists of purchased medication records) to measure chronic medication adherence. This package makes it easy to filter records where the subject has purchased chronic medication, calculate the adherence for said people grouped by medication and used year and visualize it with an interactive dashboard.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://healthinformaticsut.github.io/AdherenceFromOMOP/index.html}
+  \item \url{https://github.com/HealthInformaticsUT/AdherenceFromOMOP,}
+  \item Report bugs at \url{https://github.com/HealthInformaticsUT/AdherenceFromOMOP/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Greete Kelli Aava \email{greete.kelli.aava@ut.ee}
 
