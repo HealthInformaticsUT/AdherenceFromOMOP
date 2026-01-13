@@ -586,7 +586,7 @@ cleanNARows <- function(data){
       window.ID = ifelse(!is.na(CMA),window.ID,0)
     ) %>%
     dplyr::filter(!is.na(CMA)) %>%
-    dplyr::group_by(nonNASeries) %>%
+    dplyr::group_by(name, person_id, group, nonNASeries) %>%
     dplyr::mutate(window.ID = 1:dplyr::n()) %>%
     dplyr::ungroup() %>%
     dplyr::select(!nonNASeries)
