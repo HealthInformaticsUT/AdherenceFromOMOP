@@ -582,10 +582,10 @@ cleanNARows <- function(data){
   cleanedCMAData <- data %>%
     dplyr::group_by(name, person_id, group) %>%
     dplyr::mutate(
-      nonNASeries = cumsum(is.na(CMA) | dplyr::lag(is.na(CMA), default = TRUE)),
-      window.ID = ifelse(!is.na(CMA),window.ID,0)
+      nonNASeries = cumsum(is.na(CMA) | dplyr::lag(is.na(CMA), default = TRUE))
     ) %>%
     dplyr::filter(!is.na(CMA)) %>%
+    dplyr::ungroup() %>%
     dplyr::group_by(name, person_id, group, nonNASeries) %>%
     dplyr::mutate(window.ID = 1:dplyr::n()) %>%
     dplyr::ungroup() %>%
