@@ -89,6 +89,8 @@ adherenceSlidingWindowLoader <- function(reference,
 #' @param cma By default the function calculates adherence with all different CMA algorithms (CMA1-CMA9).
 #' @param data Can be used with in-memory data.
 #' @param medicationGroup CMA is calculated for each defined group. Medication group is a named list with a name and drug_concept_id values. For creating this list it is highly recommended to use CodelistGenerator \link[CodelistGenerator]{"https://darwin-eu.github.io/CodelistGenerator/articles/a04_GenerateVocabularyBasedCodelist.html"}
+#' @param delayObservationWindowStart delays adherence calculation window until first medication purchase
+#' @param cleanRows If TRUE, rows with NA CMA values are dropped and window.ID is reset to be sequential within each contiguous non-NA CMA interval.
 #'
 #' @return vector with CMA_sliding_windows results
 #' @export
@@ -128,6 +130,7 @@ adherenceSlidingWindow <- function(cdm = NULL,
                                    name = NULL,
                                    medicationGroup = NULL,
                                    delayObservationWindowStart = FALSE,
+                                   cleanRows = TRUE,
                                    ...) {
   if (!all(cma %in% c(
     "CMA1",
@@ -197,7 +200,9 @@ adherenceSlidingWindow <- function(cdm = NULL,
 
   cma_values <- dplyr::bind_rows(computedCMAs, .id = "name")
 
-  cma_values <- cleanNARows(cma_values)
+  if (cleanRows){
+    cma_values <- cleanNARows(cma_values)
+  }
 
   result <- addPatientInformation(data = df, cma_values = cma_values)
 
@@ -299,6 +304,9 @@ adherenceCalculationsLoader <- function(reference,
 #' @param cma By default the function calculates adherence with all different CMA algorithms (CMA1-CMA9).
 #' @param data instead of cdm provide in-memory data.
 #' @param medicationGroup CMA is calculated for each defined group. Medication group is a named list with a name and drug_concept_id values. For creating this list it is highly recommended to use CodelistGenerator \link[CodelistGenerator]{"https://darwin-eu.github.io/CodelistGenerator/articles/a04_GenerateVocabularyBasedCodelist.html"}
+#' @param delayObservationWindowStart delays adherence calculation window until first medication purchase
+#' @param cleanRows If TRUE, rows with NA CMA values are dropped and window.ID is reset to be sequential within each contiguous non-NA CMA interval.
+#'
 #'
 #' @returns table with CMA results
 #' @export
@@ -343,6 +351,7 @@ adherenceCalculations <- function(cdm = NULL,
                                   name = NULL,
                                   medicationGroup = NULL,
                                   delayObservationWindowStart = FALSE,
+                                  cleanRows = TRUE,
                                   ...) {
   if (!all(cma %in% c(
     "CMA1",
@@ -412,8 +421,9 @@ adherenceCalculations <- function(cdm = NULL,
 
   cma_values <- dplyr::bind_rows(computedCMAs, .id = "name")
 
-  cma_values <- cleanNARows(cma_values)
-
+  if (cleanRows){
+    cma_values <- cleanNARows(cma_values)
+  }
   result <- addPatientInformation(data = df, cma_values = cma_values)
 
   return(result)

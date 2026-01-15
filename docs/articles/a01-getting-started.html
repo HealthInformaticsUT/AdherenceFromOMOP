@@ -159,11 +159,11 @@ overall observation period.</p>
 <h4 id="adding-bmi-values">Adding BMI values<a class="anchor" aria-label="anchor" href="#adding-bmi-values"></a>
 </h4>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># demo data show only NA for avg_bmi</span></span>
+<code class="sourceCode R"><span><span class="co"># demo data shows only NA for avg_bmi</span></span>
 <span><span class="va">cma_with_bmi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addBMI.html">addBMI</a></span><span class="op">(</span><span class="va">adherence</span>, <span class="va">cdm</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="adding-cohort-membership-as-columns">Adding cohort membership as columns<a class="anchor" aria-label="anchor" href="#adding-cohort-membership-as-columns"></a>
+<h4 id="adding-cohort-as-columns">Adding cohort as columns<a class="anchor" aria-label="anchor" href="#adding-cohort-as-columns"></a>
 </h4>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pathToCohorts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html" class="external-link">getwd</a></span><span class="op">(</span><span class="op">)</span>,<span class="st">"/inst/"</span><span class="op">)</span> <span class="co"># path to cohorts </span></span>
@@ -173,7 +173,7 @@ overall observation period.</p>
 <span></span>
 <span><span class="va">cohort</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="va">cdm</span><span class="op">$</span><span class="va">cohort</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">adherence_with_cohorts_as_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addCohorts.html">addCohorts</a></span><span class="op">(</span><span class="va">adherence</span>, <span class="va">cohort</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">adherence_with_cohorts_as_features</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/addCohorts.html">addCohorts</a></span><span class="op">(</span><span class="va">adherence</span>, <span class="va">cohort</span>, cohortIdMappingToNames <span class="op">=</span> <span class="va">cohortSet</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="number-of-people-in-cohort">Number of people in cohort<a class="anchor" aria-label="anchor" href="#number-of-people-in-cohort"></a>

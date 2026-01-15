@@ -11,6 +11,7 @@ adherenceSlidingWindow(
   name = NULL,
   medicationGroup = NULL,
   delayObservationWindowStart = FALSE,
+  cleanRows = TRUE,
   ...
 )
 }
@@ -24,6 +25,10 @@ adherenceSlidingWindow(
 \item{name}{name of the table used for adherence calculations, generated with generateChronicDrugExposure()}
 
 \item{medicationGroup}{CMA is calculated for each defined group. Medication group is a named list with a name and drug_concept_id values. For creating this list it is highly recommended to use CodelistGenerator \link[CodelistGenerator]{"https://darwin-eu.github.io/CodelistGenerator/articles/a04_GenerateVocabularyBasedCodelist.html"}}
+
+\item{delayObservationWindowStart}{delays adherence calculation window until first medication purchase}
+
+\item{cleanRows}{If TRUE, rows with NA CMA values are dropped and window.ID is reset to be sequential within each contiguous non-NA CMA interval.}
 
 \item{...}{input values for CMA_sliding_window}
 }

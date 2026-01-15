@@ -165,11 +165,22 @@ after gaps.</p>
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, delayObservationWindowStart <span class="op">=</span> <span class="cn">FALSE</span>, medicationGroup <span class="op">=</span> <span class="va">medicationGroup</span><span class="op">)</span></span>
 <span><span class="va">results</span></span></code></pre></div>
 <p>Setting <code>delayObservationWindowStart = TRUE</code> delays the
-start of the sliding-window sequence until the first prescription is
+start of observation period used for adherence calculations, in this
+case the sliding-window sequence until the first prescription is
 dispensed.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results_delayed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw_delayed"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, delayObservationWindowStart <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">results</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">results_delayed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span></span>
+<span>  <span class="va">chronicDrugExposure</span>,</span>
+<span>  <span class="va">cdm</span>,</span>
+<span>  resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw_delayed"</span>,</span>
+<span>  cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>,</span>
+<span>  delayObservationWindowStart <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  sliding.window.duration <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  sliding.window.duration.unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"days"</span>, <span class="st">"weeks"</span>, <span class="st">"months"</span>, <span class="st">"years"</span><span class="op">)</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span>,</span>
+<span>  sliding.window.step.duration <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  sliding.window.step.unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"days"</span>, <span class="st">"weeks"</span>, <span class="st">"months"</span>, <span class="st">"years"</span><span class="op">)</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">results_delayed</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

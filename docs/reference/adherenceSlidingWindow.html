@@ -59,6 +59,7 @@
 <span>  name <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  medicationGroup <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  delayObservationWindowStart <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cleanRows <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -85,6 +86,14 @@
 
 <dt id="arg-medicationgroup">medicationGroup<a class="anchor" aria-label="anchor" href="#arg-medicationgroup"></a></dt>
 <dd><p>CMA is calculated for each defined group. Medication group is a named list with a name and drug_concept_id values. For creating this list it is highly recommended to use CodelistGenerator "https://darwin-eu.github.io/CodelistGenerator/articles/a04_GenerateVocabularyBasedCodelist.html"</p></dd>
+
+
+<dt id="arg-delayobservationwindowstart">delayObservationWindowStart<a class="anchor" aria-label="anchor" href="#arg-delayobservationwindowstart"></a></dt>
+<dd><p>delays adherence calculation window until first medication purchase</p></dd>
+
+
+<dt id="arg-cleanrows">cleanRows<a class="anchor" aria-label="anchor" href="#arg-cleanrows"></a></dt>
+<dd><p>If TRUE, rows with NA CMA values are dropped and window.ID is reset to be sequential within each contiguous non-NA CMA interval.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
