@@ -2,18 +2,42 @@
 % Please edit documentation in R/addFeatures.R
 \name{addCohorts}
 \alias{addCohorts}
-\title{Adds cohort columns to cma data}
+\title{Add cohort membership indicators to CMA results}
 \usage{
 addCohorts(cmaTable, cohortTable, cohortIdMappingToNames = NULL)
 }
 \arguments{
-\item{cmaTable}{reference to cma table}
+\item{cmaTable}{Data frame or database table reference containing CMA results.
+Must include person_id column. For sliding window results, should contain
+window.start and window.end columns; for simple CMA, should contain
+observation_window_start and observation_period_end_date.}
 
-\item{cohortTable}{cohort table that is used for adding features. reference or in memory table with columns cohort_definition_id subject_id cohort_start_date cohort_end_date}
+\item{cohortTable}{Data frame or database table reference containing cohort data
+with columns: cohort_definition_id, subject_id, cohort_start_date, cohort_end_date.}
+
+\item{cohortIdMappingToNames}{Optional named list for mapping cohort IDs to readable
+names in output columns. Should contain elements "cohort_name" and "cohort_definition_id"
+as parallel vectors. If NULL, cohort IDs are used as column name suffixes.}
 }
 \value{
-reference to table with cma and cohort data
+Data frame with original CMA columns plus, for each cohort: a binary
+  indicator column (cohort_{name}) and a time-in-cohort column (time_in_{name})
+  showing days of overlap between cohort period and CMA observation window.
+  Returns NULL if cohort periods do not overlap with CMA calculation periods.
 }
 \description{
-Adds cohort columns to cma data
+Enriches CMA calculation results with cohort membership information by joining
+CMA data with cohort tables. For each cohort, adds binary indicator columns
+(whether patient was in cohort during the observation window) and time-in-cohort
+columns (number of days the patient spent in each cohort during the window).
+Handles both sliding window and simple CMA results.
+}
+\examples{
+\dontrun{
+cdm <- mockAdherenceFromOMOP()
+cma_results <- adherenceCalculations(cdm, name = "drug_exposure", cma = "CMA5")
+cohort_mapping <- list(cohort_name = c("diabetes", "hypertension"),
+                       cohort_definition_id = c(1, 2))
+cma_with_cohorts <- addCohorts(cma_results, cdm$cohort, cohort_mapping)
+}
 }

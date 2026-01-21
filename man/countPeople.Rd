@@ -2,7 +2,7 @@
 % Please edit documentation in R/addFeatures.R
 \name{countPeople}
 \alias{countPeople}
-\title{Counts people, returns an overview of subjects}
+\title{Generate summary counts of patients in adherence analysis}
 \usage{
 countPeople(
   cdm = NULL,
@@ -14,29 +14,52 @@ countPeople(
 )
 }
 \arguments{
-\item{cdm}{A cdm reference via CDMConnector.}
+\item{cdm}{A cdm_reference object created by CDMConnector. Required only when
+cohortSchema and cohortId are provided to count cohort membership.}
 
-\item{cmaTable}{reference or in memory dataframe that contains CMA values}
+\item{cmaTable}{Optional data frame or database table reference containing CMA
+calculation results. If provided, counts unique person_id values.}
 
-\item{generatedTable}{reference or in memory dataframe that contains generateChronicDrug exposure output}
+\item{generatedTable}{Optional data frame or database table reference containing
+output from generateChronicDrugExposure. If provided, counts unique patients
+and generates yearly drug exposure summaries.}
 
-\item{cohortSchema}{string value of a schema in database}
+\item{cohortSchema}{Optional character string specifying the database schema
+containing a cohort table. Used with cohortId to count patients in cohorts.}
 
-\item{cohortId}{vector with cohort ids to count people included}
+\item{cohortId}{Optional numeric vector of cohort_definition_id values to count.
+Used together with cohortSchema.}
 
-\item{n}{minimum number of rows per year for a person to be included in 'Yearly drug exposure record count' table}
+\item{n}{Integer specifying the minimum number of drug exposure records per year
+for a patient to be included in the yearly summary. Default is 1.}
 }
 \value{
-list
+Named list containing:
+  \describe{
+    \item{"Number of people CMA generated for"}{Count from cmaTable if provided}
+    \item{"Number of people included"}{Count from generatedTable if provided}
+    \item{"Yearly drug exposure record count"}{Data frame with year and n_persons
+      columns showing patients meeting minimum record threshold per year}
+    \item{"Number of people in cohort"}{Count from cohort if cohortSchema/cohortId provided}
+  }
 }
 \description{
-Counts people, returns an overview of subjects
+Provides an overview of patient counts at different stages of the adherence
+analysis pipeline. Counts unique patients in CMA results, drug exposure data,
+and optionally in specified cohorts. Also generates yearly breakdowns of patients
+with drug exposure records meeting a minimum threshold.
 }
 \examples{
 \dontrun{
 cdm <- mockAdherenceFromOMOP()
-chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
-CMA_values <- adherenceCalculationsLoader(reference = chronicDrugExposure, cdm = cdm, cma = "CMA5")
-counts <- countPeople(cdm = cdm, cmaTable = CMA_values, generatedTable = chronicDrugExposure)
+chronicDrugExposure <- generateChronicDrugExposure(
+  cdm = cdm, name = "chronic_drug_exposure_table", overwrite = TRUE
+)
+CMA_values <- adherenceCalculationsLoader(
+  reference = chronicDrugExposure, cdm = cdm, cma = "CMA5"
+)
+counts <- countPeople(
+  cdm = cdm, cmaTable = CMA_values, generatedTable = chronicDrugExposure
+)
 }
 }

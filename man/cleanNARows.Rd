@@ -2,16 +2,23 @@
 % Please edit documentation in R/adherenceCalculations.R
 \name{cleanNARows}
 \alias{cleanNARows}
-\title{cleanNARows}
+\title{Remove rows with NA CMA values and reset window IDs}
 \usage{
 cleanNARows(data)
 }
 \arguments{
-\item{data}{}
+\item{data}{Data frame containing CMA results with columns: name (CMA type),
+person_id, group, CMA, and optionally window.ID for sliding window results.}
 }
 \value{
-\keyword{internal}
+Data frame with NA CMA rows removed. For sliding window data, window.ID
+  is reset to start from 1 within each contiguous series of non-NA values,
+  grouped by name, person_id, and group.
 }
 \description{
-User does not call this.
+Filters out rows where CMA calculation returned NA and resets window.ID numbering
+to be sequential within each contiguous block of non-NA results. This handles gaps
+in sliding window calculations where some windows may not have sufficient data
+for CMA computation.
 }
+\keyword{internal}

@@ -2,15 +2,35 @@
 % Please edit documentation in R/addFeatures.R
 \name{addBMI}
 \alias{addBMI}
-\title{adds bmi values to CMA values}
+\title{Add BMI category to CMA results}
 \usage{
 addBMI(cma_table, cdm)
 }
 \arguments{
-\item{cma_table}{reference to a table in database or one in memory that contains cma values}
+\item{cma_table}{Data frame or database table reference containing CMA results.
+Must include person_id column. For sliding window results, should also contain
+window.start and window.end columns.}
 
-\item{cdm}{a cdm_reference object}
+\item{cdm}{A cdm_reference object created by CDMConnector, providing access to
+the measurement table containing BMI records.}
+}
+\value{
+Data frame with original CMA columns plus bmi_category column containing
+  one of: "Under or normal weight" (BMI < 25), "Overweight" (25 <= BMI < 30),
+  "Obese" (BMI >= 30), or "Unknown" (no BMI measurement available).
+  For sliding window results, also includes measurement_date.
 }
 \description{
-adds bmi values to CMA values
+Enriches CMA calculation results with Body Mass Index (BMI) categories derived
+from measurement records in the OMOP CDM. For sliding window calculations, BMI
+is matched to measurements taken within one year before each window start date.
+For simple CMA calculations, the average BMI across all measurements is used.
+BMI concept_id 4245997 is used to identify BMI measurements.
+}
+\examples{
+\dontrun{
+cdm <- mockAdherenceFromOMOP()
+cma_results <- adherenceSlidingWindow(cdm, name = "drug_exposure", cma = "CMA5")
+cma_with_bmi <- addBMI(cma_results, cdm)
+}
 }
