@@ -1,15 +1,28 @@
-#' Mock database for testing package.
+#' Create a mock OMOP CDM database for testing adherence calculations
 #'
-#' @param nPerson numeric value for omock::mockPerson \link[omock]{mockPerson} function.
-#' @param recordPerson numeric value for omock::mockDrugExposure \link[omock]{mockDrugExposure} function.
-#' @param dbms currently accepts only duckdb
+#' Generates a synthetic OMOP CDM database in DuckDB with all tables required for
+#' adherence calculations: person, observation_period, drug_exposure, measurement,
+#' death, and vocabulary tables. The drug_exposure table is populated with computed
+#' days_supply values. Useful for unit testing and demonstrating package functionality
+#' without requiring access to real patient data.
 #'
-#' @returns CDM reference with necessary tables
+#' @param nPerson Integer specifying the number of synthetic patients to generate.
+#'   Passed to omock::mockPerson. Default is 5.
+#' @param recordPerson Integer specifying the number of drug exposure and measurement
+#'   records to generate per person. Passed to omock::mockDrugExposure and
+#'   omock::mockMeasurement. Default is 3.
+#' @param dbms Database management system connection object. Currently only DuckDB
+#'   is supported. Default is duckdb::duckdb().
+#'
+#' @returns A cdm_reference object connected to an in-memory DuckDB database containing
+#'   synthetic OMOP CDM tables. The write schema is set to "main" with prefix "adherencemock_".
+#'
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' cdm <- mockAdherenceFromOMOP()
+#' cdm <- mockAdherenceFromOMOP(nPerson = 10, recordPerson = 5)
 #' }
 mockAdherenceFromOMOP <- function(nPerson = 5, recordPerson = 3, dbms = duckdb::duckdb()) {
   cdm <- omopgenerics::emptyCdmReference(cdmName = "mock")

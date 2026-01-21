@@ -1,12 +1,30 @@
-#' adds bmi values to CMA values
+#' Add BMI category to CMA results
 #'
-#' @param cdm a cdm_reference object
-#' @param cma_table reference to a table in database or one in memory that contains cma values
+#' Enriches CMA calculation results with Body Mass Index (BMI) categories derived
+#' from measurement records in the OMOP CDM. For sliding window calculations, BMI
+#' is matched to measurements taken within one year before each window start date.
+#' For simple CMA calculations, the average BMI across all measurements is used.
+#' BMI concept_id 4245997 is used to identify BMI measurements.
 #'
-#' @returns
+#' @param cma_table Data frame or database table reference containing CMA results.
+#'   Must include person_id column. For sliding window results, should also contain
+#'   window.start and window.end columns.
+#' @param cdm A cdm_reference object created by CDMConnector, providing access to
+#'   the measurement table containing BMI records.
+#'
+#' @returns Data frame with original CMA columns plus bmi_category column containing
+#'   one of: "Under or normal weight" (BMI < 25), "Overweight" (25 <= BMI < 30),
+#'   "Obese" (BMI >= 30), or "Unknown" (no BMI measurement available).
+#'   For sliding window results, also includes measurement_date.
+#'
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' cdm <- mockAdherenceFromOMOP()
+#' cma_results <- adherenceSlidingWindow(cdm, name = "drug_exposure", cma = "CMA5")
+#' cma_with_bmi <- addBMI(cma_results, cdm)
+#' }
 addBMI <- function(cma_table, cdm) {
   cma_table <- dplyr::collect(cma_table)
 
@@ -58,7 +76,7 @@ addBMI <- function(cma_table, cdm) {
         group,
         date_of_birth,
         sex,
-        days_to_death,
+        date_of_death,
         bmi_category,
         measurement_date
       ) %>%
@@ -85,16 +103,39 @@ addBMI <- function(cma_table, cdm) {
 }
 
 
-#' Adds cohort columns to cma data
+#' Add cohort membership indicators to CMA results
 #'
-#' @param cohortTable cohort table that is used for adding features. reference or in memory table with columns cohort_definition_id subject_id cohort_start_date cohort_end_date
-#' @param cohortIdMappingToNames
-#' @param cmaTable reference to cma table
+#' Enriches CMA calculation results with cohort membership information by joining
+#' CMA data with cohort tables. For each cohort, adds binary indicator columns
+#' (whether patient was in cohort during the observation window) and time-in-cohort
+#' columns (number of days the patient spent in each cohort during the window).
+#' Handles both sliding window and simple CMA results.
 #'
-#' @returns reference to table with cma and cohort data
+#' @param cmaTable Data frame or database table reference containing CMA results.
+#'   Must include person_id column. For sliding window results, should contain
+#'   window.start and window.end columns; for simple CMA, should contain
+#'   observation_window_start and observation_period_end_date.
+#' @param cohortTable Data frame or database table reference containing cohort data
+#'   with columns: cohort_definition_id, subject_id, cohort_start_date, cohort_end_date.
+#' @param cohortIdMappingToNames Optional named list for mapping cohort IDs to readable
+#'   names in output columns. Should contain elements "cohort_name" and "cohort_definition_id"
+#'   as parallel vectors. If NULL, cohort IDs are used as column name suffixes.
+#'
+#' @returns Data frame with original CMA columns plus, for each cohort: a binary
+#'   indicator column (cohort_{name}) and a time-in-cohort column (time_in_{name})
+#'   showing days of overlap between cohort period and CMA observation window.
+#'   Returns NULL if cohort periods do not overlap with CMA calculation periods.
+#'
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' cdm <- mockAdherenceFromOMOP()
+#' cma_results <- adherenceCalculations(cdm, name = "drug_exposure", cma = "CMA5")
+#' cohort_mapping <- list(cohort_name = c("diabetes", "hypertension"),
+#'                        cohort_definition_id = c(1, 2))
+#' cma_with_cohorts <- addCohorts(cma_results, cdm$cohort, cohort_mapping)
+#' }
 addCohorts <- function(cmaTable, cohortTable, cohortIdMappingToNames = NULL) {
   cmaTable <- dplyr::collect(cmaTable)
   cohort <- dplyr::collect(cohortTable)
@@ -204,24 +245,50 @@ addCohorts <- function(cmaTable, cohortTable, cohortIdMappingToNames = NULL) {
 }
 
 
-#' Counts people, returns an overview of subjects
+#' Generate summary counts of patients in adherence analysis
 #'
-#' @param cdm A cdm reference via CDMConnector.
-#' @param cmaTable reference or in memory dataframe that contains CMA values
-#' @param generatedTable reference or in memory dataframe that contains generateChronicDrug exposure output
-#' @param cohortSchema string value of a schema in database
-#' @param cohortId vector with cohort ids to count people included
-#' @param n minimum number of rows per year for a person to be included in 'Yearly drug exposure record count' table
+#' Provides an overview of patient counts at different stages of the adherence
+#' analysis pipeline. Counts unique patients in CMA results, drug exposure data,
+#' and optionally in specified cohorts. Also generates yearly breakdowns of patients
+#' with drug exposure records meeting a minimum threshold.
 #'
-#' @returns list
+#' @param cdm A cdm_reference object created by CDMConnector. Required only when
+#'   cohortSchema and cohortId are provided to count cohort membership.
+#' @param cmaTable Optional data frame or database table reference containing CMA
+#'   calculation results. If provided, counts unique person_id values.
+#' @param generatedTable Optional data frame or database table reference containing
+#'   output from generateChronicDrugExposure. If provided, counts unique patients
+#'   and generates yearly drug exposure summaries.
+#' @param cohortSchema Optional character string specifying the database schema
+#'   containing a cohort table. Used with cohortId to count patients in cohorts.
+#' @param cohortId Optional numeric vector of cohort_definition_id values to count.
+#'   Used together with cohortSchema.
+#' @param n Integer specifying the minimum number of drug exposure records per year
+#'   for a patient to be included in the yearly summary. Default is 1.
+#'
+#' @returns Named list containing:
+#'   \describe{
+#'     \item{"Number of people CMA generated for"}{Count from cmaTable if provided}
+#'     \item{"Number of people included"}{Count from generatedTable if provided}
+#'     \item{"Yearly drug exposure record count"}{Data frame with year and n_persons
+#'       columns showing patients meeting minimum record threshold per year}
+#'     \item{"Number of people in cohort"}{Count from cohort if cohortSchema/cohortId provided}
+#'   }
+#'
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' cdm <- mockAdherenceFromOMOP()
-#' chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
-#' CMA_values <- adherenceCalculationsLoader(reference = chronicDrugExposure, cdm = cdm, cma = "CMA5")
-#' counts <- countPeople(cdm = cdm, cmaTable = CMA_values, generatedTable = chronicDrugExposure)
+#' chronicDrugExposure <- generateChronicDrugExposure(
+#'   cdm = cdm, name = "chronic_drug_exposure_table", overwrite = TRUE
+#' )
+#' CMA_values <- adherenceCalculationsLoader(
+#'   reference = chronicDrugExposure, cdm = cdm, cma = "CMA5"
+#' )
+#' counts <- countPeople(
+#'   cdm = cdm, cmaTable = CMA_values, generatedTable = chronicDrugExposure
+#' )
 #' }
 countPeople <- function(cdm = NULL,
                         cmaTable = NULL,
