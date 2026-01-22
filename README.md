@@ -1,0 +1,111 @@
+
+# Adherence from OMOP
+
+## Overview
+
+Adherence is a concept that indicates how well does the patient follow
+the healthcare provider’s recommendation. Medication adherence
+specifically shows if the patient follows their medication regimen or
+are there any gaps. This is important for medications which are meant to
+be consumed for chronic diseases, where the efficacy of the treatment is
+closely correlated with the continuity of medication consumption. One
+possibility to measure adherence is secondary database analysis.
+
+AdherenceFromOMOP contains functions to measure chronic medication
+adherence using drug_exposure table in data mapped to the OMOP Common
+Data Model. The package supports:
+
+- generating drug exposure records for cohorts and/or specific
+  medications
+
+- calculating medication adherence for observation period
+
+- calculating medication adherence using sliding window approach to view
+  specific periods in observation period
+
+- add cohort features as columns to data returned by adherence functions
+
+- view the number of people in areas of interest
+
+## Getting started with the basics
+
+### Install package
+
+``` r
+# Install AdherenceFromOMOP
+devtools::install_github("https://github.com/HealthInformaticsUT/AdherenceFromOMOP/")
+
+# Install required dependencies
+install.packages(c("dplyr", "DBI", "cli", "rlang", "magrittr", "tidyr", "lubridate", "data.table"))
+install.packages("RPostgres")  # For PostgreSQL
+install.packages("duckdb")     # For DuckDB
+install.packages("remotes")
+remotes::install_github("darwin-eu/CDMConnector")
+remotes::install_github("darwin-eu/CodelistGenerator")
+remotes::install_github("darwin-eu/PatientProfiles")
+install.packages("AdhereR")
+
+# Load libraries
+library(AdherenceFromOMOP)
+library(CDMConnector)
+library(CodelistGenerator)
+library(dplyr)
+library(DBI)
+```
+
+### Database connection with CDMConnector
+
+AdherenceFromOMOP relies on CDMConnector for database connection and
+other options are currently unavailable.
+
+``` r
+readRenviron("~/.Renviron")
+
+writePrefix <- "adherencefromomop_"
+
+db <- DBI::dbConnect(
+  RPostgres::Postgres(),
+  dbname = Sys.getenv("DB_NAME"),
+  host = Sys.getenv("DB_HOST"),
+  user = Sys.getenv("DB_USERNAME"),
+  password = Sys.getenv("DB_PASSWORD"),
+  port = Sys.getenv("DB_PORT")
+)
+
+cdm <- CDMConnector::cdmFromCon(
+  con = db,
+  cdmSchema = Sys.getenv("OHDSI_CDM"),
+  writeSchema = Sys.getenv("OHDSI_WRITE"),
+  writePrefix = writePrefix
+)
+```
+
+### Calculating adherence
+
+Using adherenceFromOMOP involves two main steps. First, the required
+data must be retrieved and written to a designated table in the
+database.
+
+To extract the necessary data, use generateChronicDrugExposure. For
+conceptSet input variable, which expects drug_concept_id values
+in a list, it is recommended to use
+[CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
+
+``` r
+# recommended method for acquiring drug_concept_id values
+drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"))
+
+# Step 1 - data generation
+chronicDrugExposure <- generateChronicDrugExposure(
+  cdm = cdm,
+  conceptSet = drugIngredientCodes,
+  name = "chronic_drug_exposure_table",
+  overwrite = T
+)
+
+chronicDrugExposure
+```
+
+``` r
+adherence <- calculateAdherence(drugExposure = chronicDrugExposure, cdm = cdm, cma = c("CMA5"))
+```
