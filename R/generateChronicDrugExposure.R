@@ -2,7 +2,7 @@
 #'
 #' Extracts and prepares drug exposure records from an OMOP CDM database for use
 #' in medication adherence calculations. Joins drug exposure data with patient
-#' demographics (date of birth, sex, days to death) and observation period information.
+#' demographics (date of birth, sex, date of death) and observation period information.
 #' Optionally filters by specific drug concepts or cohort membership.
 #'
 #' @param cdm A cdm_reference object created by CDMConnector, providing access to
@@ -27,7 +27,7 @@
 #'
 #' @return A database table reference containing drug exposure records with columns:
 #'   person_id, drug_concept_id, drug_exposure_start_date, days_supply, date_of_birth,
-#'   sex, date_0f_death, observation_period_start_date, observation_period_end_date.
+#'   sex, date_of_death, observation_period_start_date, observation_period_end_date.
 #'   When cohortSchema is used, also includes cohort_start_date and cohort_end_date.
 #'   Returns NULL if validation fails or no records match the criteria.
 #'

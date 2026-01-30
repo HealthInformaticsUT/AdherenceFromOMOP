@@ -149,7 +149,7 @@ cdm <- CDMConnector::generateCohortSet(cdm, cohortSet, "cohort")
 
 cohortTable <- dplyr::collect(cdm$cohort)
 
-cma_values_with_cohort_features <- addCohort(adherenceCMA5, cohortTable)
+cma_values_with_cohort_features <- addCohorts(adherenceCMA5, cohortTable)
 ```
 
 Adding body mass index is a separate function.
@@ -158,8 +158,7 @@ Adding body mass index is a separate function.
 cma_data_with_bmi <- addBMI(adherenceCMA5, cdm)
 ```
 
-To get an overview this function reports the number of individuals in three groups:
-(1) individuals included in the cohort,
+To get an overview this function reports the number of individuals in three groups: (1) individuals included in the cohort,
 
 (2) individuals with calculated adherence values,
 
