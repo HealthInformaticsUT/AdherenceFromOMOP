@@ -121,7 +121,7 @@
 <p>To extract the necessary data, use generateChronicDrugExposure. For conceptSet input variable, which expects drug_concept_id values in a list, it is recommended to use <a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">CodelistGenerator</a>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># recommended method for acquiring drug_concept_id values</span></span>
-<span><span class="va">drugIngredientCodes</span> <span class="op">&lt;-</span> <span class="fu">CodelistGenerator</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a></span><span class="op">(</span>cdm <span class="op">=</span> <span class="va">cdm</span>, name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Atorvastatin"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">drugIngredientCodes</span> <span class="op">&lt;-</span> <span class="fu">CodelistGenerator</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a></span><span class="op">(</span>cdm <span class="op">=</span> <span class="va">cdm</span>, name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Atorvastatin"</span><span class="op">)</span>, nameStyle <span class="op">=</span> <span class="st">"{concept_name}"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Step 1 - data generation</span></span>
 <span><span class="va">chronicDrugExposure</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/generateChronicDrugExposure.html">generateChronicDrugExposure</a></span><span class="op">(</span></span>
@@ -132,8 +132,11 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">chronicDrugExposure</span></span></code></pre></div>
+<p>There are multiple options for calculating adherence, for more information check out the documentation.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">adherence</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/calculateAdherence.html">calculateAdherence</a></span><span class="op">(</span>drugExposure <span class="op">=</span> <span class="va">chronicDrugExposure</span>, cdm <span class="op">=</span> <span class="va">cdm</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Step 2</span></span>
+<span><span class="va">adherence</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/calculateAdherence.html">calculateAdherence</a></span><span class="op">(</span>drugExposure <span class="op">=</span> <span class="va">chronicDrugExposure</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">adherence</span></span></code></pre></div>
 </div>
 </div>
 </div>
