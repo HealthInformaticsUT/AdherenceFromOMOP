@@ -85,7 +85,10 @@ chronicDrugExposure <- generateChronicDrugExposure(
 chronicDrugExposure
 ```
 
+There are multiple options for calculating adherence, for more information check out the documentation.
+
 ```{r, eval = FALSE}
+# Step 2
 adherence <- calculateAdherence(drugExposure = chronicDrugExposure, cma = c("CMA5"))
 adherence
 ```

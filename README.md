@@ -76,7 +76,7 @@ list, it is recommended to use
 
 ``` r
 # recommended method for acquiring drug_concept_id values
-drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"))
+drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"), nameStyle = "{concept_name}")
 
 # Step 1 - data generation
 chronicDrugExposure <- generateChronicDrugExposure(
@@ -89,6 +89,11 @@ chronicDrugExposure <- generateChronicDrugExposure(
 chronicDrugExposure
 ```
 
+There are multiple options for calculating adherence, for more
+information check out the documentation.
+
 ``` r
-adherence <- calculateAdherence(drugExposure = chronicDrugExposure, cdm = cdm, cma = c("CMA5"))
+# Step 2
+adherence <- calculateAdherence(drugExposure = chronicDrugExposure, cma = c("CMA5"))
+adherence
 ```
