@@ -180,7 +180,9 @@ Gap-based measure using the full observation window start → end. No anchoring 
 # (numberof daysof theoreticaluse)/(starttoendof observationwindow)
 plot(cma_values$CMA7, period.in.days = 60, show.legend = FALSE)
 ```
+
 ![FIGURE 5 - Example of CMA7 graph, visualised with AdhereR](./figs/fig_cma7.png)
+
 ## CMA8
 
 Lagged version of CMA7. The observation window starts after a short “lag” from the event that starts before the observation window. Useful when excluding an initial adjustment period.
