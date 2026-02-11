@@ -10,6 +10,7 @@ calculateAdherence(
   cma = c("CMA1", "CMA2", "CMA3", "CMA4", "CMA5", "CMA6", "CMA7", "CMA8", "CMA9"),
   medicationGroup = NULL,
   delayObservationWindowStart = FALSE,
+  cleanRows = TRUE,
   ...
 )
 }
@@ -30,6 +31,9 @@ each group. If `NULL`, all medications are treated as one group.}
 
 \item{delayObservationWindowStart}{(`logical(1)`) Should the observation window start
 be delayed until the first prescription? Default: `FALSE`.}
+
+\item{cleanRows}{(`logical(1)`) If TRUE, rows with NA CMA values are dropped.
+Default: `TRUE`.}
 
 \item{...}{Additional arguments passed to AdhereR CMA functions.}
 }

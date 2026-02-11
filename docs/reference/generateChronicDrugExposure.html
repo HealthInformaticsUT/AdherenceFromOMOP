@@ -55,13 +55,12 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generateChronicDrugExposure</span><span class="op">(</span></span>
 <span>  <span class="va">cdm</span>,</span>
 <span>  name <span class="op">=</span> <span class="st">"adherenceFromOMOP"</span>,</span>
-<span>  indexDateForPatientCalculation <span class="op">=</span> <span class="st">"drug_exposure_start_date"</span>,</span>
+<span>  conceptSet <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  indexDate <span class="op">=</span> <span class="st">"drug_exposure_start_date"</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  subjects <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  drugConceptIdList <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cohortSchema <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cohort <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cohortId <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  cohortTableName <span class="op">=</span> <span class="st">"cohort"</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -71,60 +70,66 @@
 
 
 <dl><dt id="arg-cdm">cdm<a class="anchor" aria-label="anchor" href="#arg-cdm"></a></dt>
-<dd><p>A cdm reference via CDMConnector.</p></dd>
+<dd><p>(`cdm_reference`) A CDM reference object created with CDMConnector.</p></dd>
 
 
 <dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
-<dd><p>Name of the new cohort table, it must be a length 1 character vector.</p></dd>
+<dd><p>(`character(1)`) Name for the output table in the database.</p></dd>
 
 
-<dt id="arg-indexdateforpatientcalculation">indexDateForPatientCalculation<a class="anchor" aria-label="anchor" href="#arg-indexdateforpatientcalculation"></a></dt>
-<dd><p>Value for indexDate in addDeathDays function from PatientProfiles.</p></dd>
+<dt id="arg-conceptset">conceptSet<a class="anchor" aria-label="anchor" href="#arg-conceptset"></a></dt>
+<dd><p>(`list`, `codelist`, or `NULL`) Named list of drug concept IDs.
+Recommended to use [CodelistGenerator::getDrugIngredientCodes()].
+If `NULL`, all drugs in the drug_exposure table are included.</p></dd>
+
+
+<dt id="arg-indexdate">indexDate<a class="anchor" aria-label="anchor" href="#arg-indexdate"></a></dt>
+<dd><p>(`character(1)`) Name of the column to use as the index date
+for patient-level calculations. Default: `"drug_exposure_start_date"`.</p></dd>
 
 
 <dt id="arg-overwrite">overwrite<a class="anchor" aria-label="anchor" href="#arg-overwrite"></a></dt>
-<dd><p>If table with provided name exists this value chooses the action.</p></dd>
+<dd><p>If table with provided name exists, should it be overwritten?
+Default: `FALSE`.</p></dd>
 
 
 <dt id="arg-subjects">subjects<a class="anchor" aria-label="anchor" href="#arg-subjects"></a></dt>
-<dd><p>Possibility to choose a specific set of subjects.</p></dd>
+<dd><p>(`numeric` or `NULL`) Optional vector of person_id values to restrict
+the drug exposure data to specific subjects.</p></dd>
 
 
-<dt id="arg-drugconceptidlist">drugConceptIdList<a class="anchor" aria-label="anchor" href="#arg-drugconceptidlist"></a></dt>
-<dd><p>list with drug concept ids that determine if drug exposure records are included or not</p></dd>
-
-
-<dt id="arg-cohortschema">cohortSchema<a class="anchor" aria-label="anchor" href="#arg-cohortschema"></a></dt>
-<dd><p>Possible include only certain people that exist in a specific defined cohort between a time period. Parameter cohort schema must be a string value of the database schema with the defined cohort.</p></dd>
+<dt id="arg-cohort">cohort<a class="anchor" aria-label="anchor" href="#arg-cohort"></a></dt>
+<dd><p>(`tbl` or `NULL`) Optional cohort table reference to filter drug exposures.
+Only drug exposures for subjects in the cohort and within the cohort period will be included.</p></dd>
 
 
 <dt id="arg-cohortid">cohortId<a class="anchor" aria-label="anchor" href="#arg-cohortid"></a></dt>
-<dd><p>List of numeric values of the defined cohorts that haveS included person ids as well as start and end date of the cohort.</p></dd>
-
-
-<dt id="arg-cohorttablename">cohortTableName<a class="anchor" aria-label="anchor" href="#arg-cohorttablename"></a></dt>
-<dd><p>usually named "cohort"</p></dd>
+<dd><p>(`numeric` or `NULL`) If `cohort` is provided, optional vector of
+cohort_definition_id values to use. If `NULL`, all cohorts in the table are used.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Arguments to be passed to CodelistGenerator <a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a> function.</p></dd>
+<dd><p>Additional arguments (currently unused).</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>reference to table</p>
+    <p>A database table reference containing drug exposure records with patient information.
+  Columns include: person_id, drug_concept_id, drug_exposure_start_date, days_supply,
+  date_of_birth, sex, date_of_death, observation_period_start_date, observation_period_end_date.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="va">cdm</span> <span class="op">&lt;-</span> <span class="fu"><a href="mockAdherenceFromOMOP.html">mockAdherenceFromOMOP</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cdm</span> <span class="op">&lt;-</span> <span class="fu"><a href="mockDrugExposure.html">mockDrugExposure</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">conceptSet</span> <span class="op">&lt;-</span> <span class="fu">CodelistGenerator</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a></span><span class="op">(</span><span class="va">cdm</span>, name <span class="op">=</span> <span class="st">"Atorvastatin"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">chronicDrugExposure</span> <span class="op">&lt;-</span> <span class="fu">generateChronicDrugExposure</span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="va">drugExposure</span> <span class="op">&lt;-</span> <span class="fu">generateChronicDrugExposure</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  cdm <span class="op">=</span> <span class="va">cdm</span>,</span></span>
-<span class="r-in"><span>  drugConceptIdList <span class="op">=</span> <span class="va">concepts_ids</span>,</span></span>
-<span class="r-in"><span>  name <span class="op">=</span> <span class="st">"chronic_drug_exposure_table"</span>,</span></span>
-<span class="r-in"><span>  overwrite <span class="op">=</span> <span class="cn">T</span></span></span>
+<span class="r-in"><span>  conceptSet <span class="op">=</span> <span class="va">conceptSet</span>,</span></span>
+<span class="r-in"><span>  name <span class="op">=</span> <span class="st">"chronic_drug_exposure"</span>,</span></span>
+<span class="r-in"><span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
@@ -134,7 +139,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Johannes Holm, Greete Kelli Aava.</p>
+  <p>Developed by Greete Kelli Aava, Johannes Holm.</p>
 </div>
 
 <div class="pkgdown-footer-right">

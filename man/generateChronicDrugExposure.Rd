@@ -28,7 +28,7 @@ If `NULL`, all drugs in the drug_exposure table are included.}
 \item{indexDate}{(`character(1)`) Name of the column to use as the index date
 for patient-level calculations. Default: `"drug_exposure_start_date"`.}
 
-\item{overwrite}{(`logical(1)`) If table with provided name exists, should it be overwritten?
+\item{overwrite}{If table with provided name exists, should it be overwritten?
 Default: `FALSE`.}
 
 \item{subjects}{(`numeric` or `NULL`) Optional vector of person_id values to restrict
@@ -45,7 +45,7 @@ cohort_definition_id values to use. If `NULL`, all cohorts in the table are used
 \value{
 A database table reference containing drug exposure records with patient information.
   Columns include: person_id, drug_concept_id, drug_exposure_start_date, days_supply,
-  date_of_birth, sex, days_to_death, observation_period_start_date, observation_period_end_date.
+  date_of_birth, sex, date_of_death, observation_period_start_date, observation_period_end_date.
 }
 \description{
 Get drug exposure entries for adherence calculations

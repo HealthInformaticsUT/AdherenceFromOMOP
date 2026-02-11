@@ -76,6 +76,9 @@
 
     
     
+<p><strong>Note:</strong> Before running the code in this vignette, make
+sure you have installed and loaded all required packages. See the <a href="a01-getting-started.html">Getting Started</a> vignette for
+installation instructions.</p>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -83,13 +86,13 @@
 (Continuous Medication Availability) measure selected.
 <strong>AdherenceFromOMOP</strong> supports CMA types
 <strong>1–9</strong>. For examples illustrating the behavior of
-different CMA types, see the <a href="#id_0" style="font-size: 11pt;">Intro to CMA</a> tutorial. In this package
-adherenceSlidingWindow and adherenceCalculations are wrappers for
-functions in <a href="#id_0" style="font-size: 11pt;" title="link to package">AdhereR</a> package.</p>
+different CMA types, see the <a href="a04-adherence.html">Intro to
+CMA</a> tutorial. This package provides wrappers for functions in <a href="https://www.adherer.eu/" class="external-link">AdhereR</a> package to calculate
+adherence on OMOP CDM.</p>
 <p>For more detailed guidance, refer to the <a href="https://cran.r-project.org/web/packages/AdhereR/AdhereR.pdf" title="link to cran" class="external-link">AdhereR documentation</a>.</p>
 <p>For large datasets, it is recommended to use
-<code>adherenceSlidingWindowLoader</code> and
-<code>adherenceCalculationsLoader</code>, which load data in chunks and
+<code>calculateAdherenceSlidingWindowBatched</code> and
+<code>calculateAdherenceBatched</code>, which load data in chunks and
 write results directly to the database.</p>
 <p>In <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426" class="external-link">AdhereR</a>
 software the follow-up window is the total period for which relevant
@@ -134,7 +137,7 @@ documentation in <strong>AdhereR</strong>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">medicationGroup</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1361364</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1830280</span><span class="op">)</span>   <span class="co"># vectors of drug_concept_ids</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1830280</span><span class="op">)</span> <span class="co"># vectors of drug_concept_ids</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">groupNames</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group1"</span>, <span class="st">"group2"</span><span class="op">)</span></span>
 <span></span>
@@ -149,7 +152,7 @@ documentation in <strong>AdhereR</strong>.</p>
 <p>This is used for calculating adherence throughout subjects
 observation period.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceCalculationsLoader.html">adherenceCalculationsLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_cma5"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, medicationGroup <span class="op">=</span> <span class="va">medicationGroup</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculateAdherenceBatched.html">calculateAdherenceBatched</a></span><span class="op">(</span>drugExposure <span class="op">=</span> <span class="va">chronicDrugExposure</span>, cdm <span class="op">=</span> <span class="va">cdm</span>, name <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_cma5"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, medicationGroup <span class="op">=</span> <span class="va">medicationGroup</span><span class="op">)</span></span>
 <span><span class="va">results</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -159,17 +162,29 @@ observation period.</p>
 within the observation period, allowing adherence to be examined over
 time. Unlike the AdhereR function output, window.ID values are not
 unique across all records for a given patient. They are assigned
-sequentially within each contiguous period without NA values and reset
+sequentially within each continuous period without NA values and reset
 after gaps.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, delayObservationWindowStart <span class="op">=</span> <span class="cn">FALSE</span>, medicationGroup <span class="op">=</span> <span class="va">medicationGroup</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculateAdherenceSlidingWindowBatched.html">calculateAdherenceSlidingWindowBatched</a></span><span class="op">(</span>drugExposure <span class="op">=</span> <span class="va">chronicDrugExposure</span>, cdm <span class="op">=</span> <span class="va">cdm</span>, name <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, delayObservationWindowStart <span class="op">=</span> <span class="cn">FALSE</span>, medicationGroup <span class="op">=</span> <span class="va">medicationGroup</span><span class="op">)</span></span>
 <span><span class="va">results</span></span></code></pre></div>
 <p>Setting <code>delayObservationWindowStart = TRUE</code> delays the
-start of the sliding-window sequence until the first prescription is
+start of observation period used for adherence calculations, in this
+case the sliding-window sequence until the first prescription is
 dispensed.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">results_delayed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader</a></span><span class="op">(</span><span class="va">chronicDrugExposure</span>, <span class="va">cdm</span>, resultsTableName <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw_delayed"</span>, cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>, delayObservationWindowStart <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">results</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">results_delayed</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculateAdherenceSlidingWindowBatched.html">calculateAdherenceSlidingWindowBatched</a></span><span class="op">(</span></span>
+<span>  drugExposure <span class="op">=</span> <span class="va">chronicDrugExposure</span>,</span>
+<span>  cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
+<span>  name <span class="op">=</span> <span class="st">"AdherenceFromOMOP_demo_sw_delayed"</span>,</span>
+<span>  cma <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CMA5"</span><span class="op">)</span>,</span>
+<span>  delayObservationWindowStart <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  <span class="co"># the following sets sliding window with duration of 1 year and step length of 1 year:</span></span>
+<span>  sliding.window.duration <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  sliding.window.duration.unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"days"</span>, <span class="st">"weeks"</span>, <span class="st">"months"</span>, <span class="st">"years"</span><span class="op">)</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span>,</span>
+<span>  sliding.window.step.duration <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  sliding.window.step.unit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"days"</span>, <span class="st">"weeks"</span>, <span class="st">"months"</span>, <span class="st">"years"</span><span class="op">)</span><span class="op">[</span><span class="fl">4</span><span class="op">]</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">results_delayed</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -178,7 +193,7 @@ dispensed.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Johannes Holm, Greete Kelli Aava.</p>
+  <p>Developed by Greete Kelli Aava, Johannes Holm.</p>
 </div>
 
 <div class="pkgdown-footer-right">

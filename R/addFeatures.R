@@ -7,6 +7,19 @@
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' cdm <- mockDrugExposure()
+#' chronicDrugExposure <- generateChronicDrugExposure(
+#'   cdm = cdm,
+#'   name = "chronic_drug_exposure_table",
+#'   overwrite = T
+#' )
+#' CMA_values <- calculateAdherenceBatched(
+#'   drugExposure = chronicDrugExposure,
+#'   cdm = cdm, cma = "CMA5"
+#' )
+#' withBMI <- addBMI(CMA_values, cdm)
+#' }
 addBMI <- function(adherenceData, cdm) {
   cma_table <- dplyr::collect(adherenceData)
 
@@ -30,13 +43,42 @@ addBMI <- function(adherenceData, cdm) {
       person_id,
       between(
         y$measurement_date,
-        x$window.start,
-        x$window.start.year.before
+        x$window.start.year.before,
+        x$window.start
       )
     )
     cma_table <- cma_table %>%
       dplyr::mutate(window.start.year.before = as.Date(window.start - 365)) %>%
-      dplyr::left_join(bmi, by, copy = TRUE) %>%
+      dplyr::left_join(bmi, by, copy = TRUE)
+
+    # Fallback: for rows without a BMI measurement in window,
+    # use the closest measurement to window.start
+    rows_without_bmi <- cma_table %>%
+      dplyr::filter(is.na(value_source_value)) %>%
+      dplyr::select(-measurement_date, -unit_source_value, -value_source_value)
+
+    if (nrow(rows_without_bmi) > 0 && nrow(bmi) > 0) {
+      closest_bmi <- rows_without_bmi %>%
+        dplyr::left_join(bmi, by = "person_id") %>%
+        dplyr::mutate(
+          date_diff = abs(as.numeric(difftime(
+            measurement_date, window.start,
+            units = "days"
+          )))
+        ) %>%
+        dplyr::group_by(name, person_id, window.start, window.end, group) %>%
+        dplyr::arrange(date_diff) %>%
+        dplyr::slice(1) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(-date_diff)
+
+      cma_table <- dplyr::bind_rows(
+        cma_table %>% dplyr::filter(!is.na(value_source_value)),
+        closest_bmi
+      )
+    }
+
+    cma_table <- cma_table %>%
       dplyr::mutate(
         value_source_value_num = as.numeric(value_source_value),
         bmi_category = dplyr::case_when(
@@ -58,7 +100,7 @@ addBMI <- function(adherenceData, cdm) {
         group,
         date_of_birth,
         sex,
-        days_to_death,
+        date_of_death,
         bmi_category,
         measurement_date
       ) %>%
@@ -71,7 +113,7 @@ addBMI <- function(adherenceData, cdm) {
     cma_table <- cma_table %>%
       dplyr::left_join(avg_bmi, dplyr::join_by(person_id), copy = TRUE) %>%
       dplyr::mutate(
-        BMIcategory = dplyr::case_when(
+        bmi_category = dplyr::case_when(
           avg_bmi < 25.0 ~ "Under or normal weight",
           avg_bmi >= 25.0 &
             avg_bmi < 30.0 ~ "Overweight",
@@ -90,12 +132,34 @@ addBMI <- function(adherenceData, cdm) {
 #' @inheritParams adherenceDataDoc
 #' @param cohort Cohort table reference or in-memory table with columns:
 #'   cohort_definition_id, subject_id, cohort_start_date, cohort_end_date.
-#' @param cohortIdMappingToNames (`list` or `NULL`) Optional mapping of cohort IDs to names.
+#' @param cohortIdMappingToNames (`list` or `NULL`)
+#'   Optional mapping of cohort IDs to names.
 #'
 #' @returns Reference to table with adherence and cohort data.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' cdm <- mockDrugExposure()
+#'
+#' chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
+#'
+#' CMA_values <- calculateAdherenceBatched(drugExposure = chronicDrugExposure, cdm = cdm, cma = "CMA5")
+#'
+#' observ_dates <- cdm$observation_period %>%
+#'   dplyr::filter(person_id == 1) %>%
+#'   dplyr::select(observation_period_start_date, observation_period_end_date) %>%
+#'   dplyr::collect()
+#'
+#' cohortTable <- dplyr::tibble(
+#'   cohort_definition_id = 1,
+#'   subject_id = 1,
+#'   cohort_start_date = observ_dates$observation_period_start_date,
+#'   cohort_end_date = observ_dates$observation_period_end_date
+#' )
+#'
+#' withCohort <- addCohorts(CMA_values, cohortTable)
+#' }
 addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
   cmaTable <- dplyr::collect(adherenceData)
   cohort <- dplyr::collect(cohort)
@@ -165,9 +229,9 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
       )
   }
 
-  if (all(is.na(unique(cma_with_cohort$cohort_definition_id)))){
+  if (all(is.na(unique(cma_with_cohort$cohort_definition_id)))) {
     cli::cli_alert_info("Cohort time periods and time periods CMA is calculated for don't match.")
-    return( NULL )
+    return(NULL)
   }
 
   cohort_names <- stats::setNames(c(
@@ -213,9 +277,12 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
 #' @inheritParams adherenceDataDoc
 #' @inheritParams drugExposureDoc
 #' @inheritParams cdmDoc
-#' @param cohort (`tbl` or `NULL`) Optional cohort table reference for additional counts.
-#' @param cohortId (`numeric` or `NULL`) Optional vector of cohort_definition_id values.
-#' @param n (`numeric(1)`) Minimum number of rows per year for a person to be included
+#' @param cohort (`tbl` or `NULL`) Optional cohort table reference
+#'  for additional counts.
+#' @param cohortId (`numeric` or `NULL`) Optional vector of
+#'  cohort_definition_id values.
+#' @param n (`numeric(1)`) Minimum number of rows per year for a person
+#'  to be included
 #'   in 'Yearly drug exposure record count' table. Default: 1.
 #'
 #' @returns Named list with patient count summaries.
@@ -248,7 +315,7 @@ summarisePatientCounts <- function(adherenceData = NULL,
       dplyr::pull()
     result["Number of people CMA generated for"] <- as.integer(count)
   }
-  if (!is.null(drugExposure)){
+  if (!is.null(drugExposure)) {
     count <- drugExposure %>%
       dplyr::select(person_id) %>%
       dplyr::distinct() %>%

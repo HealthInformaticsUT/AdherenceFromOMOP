@@ -16,10 +16,10 @@ reference:
 - subtitle: Adherence calculations
   desc: Functions used to calculate medication adherence
 - contents:
-  - adherenceCalculationsLoader
-  - adherenceSlidingWindowLoader
-  - adherenceCalculations
-  - adherenceSlidingWindow
+  - calculateAdherenceBatched
+  - calculateAdherenceSlidingWindowBatched
+  - calculateAdherence
+  - calculateAdherenceSlidingWindow
 - subtitle: Add features to data
   desc: Possibility to add cohorts as features and patient characteristics
 - contents:
@@ -28,11 +28,11 @@ reference:
 - subtitle: Population stats
   desc: View statistics
 - contents:
-  - countPeople
+  - summarisePatientCounts
 - subtitle: Mockdata generation
   desc: Testing package, demos, internal functions
 - contents:
-  - mockAdherenceFromOMOP
+  - mockDrugExposure
   - cleanNARows
   - addPatientInformation
   - loadData

@@ -1,5 +1,4 @@
 testthat::test_that("testing summarisePatientCounts", {
-
   cdm <- mockDrugExposure()
 
   chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
@@ -12,7 +11,7 @@ testthat::test_that("testing summarisePatientCounts", {
 })
 
 
-testthat::test_that("addBMI testing",{
+testthat::test_that("addBMI testing", {
   cdm <- mockDrugExposure()
 
   chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
@@ -22,10 +21,9 @@ testthat::test_that("addBMI testing",{
   withBMI <- addBMI(CMA_values, cdm)
 
   testthat::expect_true(!is.null(withBMI))
-
 })
 
-testthat::test_that("addCohorts testing",{
+testthat::test_that("addCohorts testing", {
   cdm <- mockDrugExposure()
 
   chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
@@ -48,10 +46,9 @@ testthat::test_that("addCohorts testing",{
   withCohort <- addCohorts(CMA_values, cohortTable)
 
   testthat::expect_true(!is.null(withCohort))
-
 })
 
-testthat::test_that("addCohorts testing with sliding window",{
+testthat::test_that("addCohorts testing with sliding window", {
   cdm <- mockDrugExposure()
 
   chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
@@ -75,10 +72,9 @@ testthat::test_that("addCohorts testing with sliding window",{
   withCohort <- addCohorts(CMA_values, cohortTable)
 
   testthat::expect_true(!is.null(withCohort))
-
 })
 
-testthat::test_that("addbmi testing with sliding window",{
+testthat::test_that("addbmi testing with sliding window", {
   cdm <- mockDrugExposure()
 
   chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
@@ -89,11 +85,9 @@ testthat::test_that("addbmi testing with sliding window",{
   withBMI <- addBMI(CMA_values, cdm)
 
   testthat::expect_true(!is.null(withBMI))
-
 })
 
 testthat::test_that("testing summarisePatientCounts with cohort", {
-
   cdm <- mockDrugExposure()
 
   observ_dates <- cdm$observation_period %>%

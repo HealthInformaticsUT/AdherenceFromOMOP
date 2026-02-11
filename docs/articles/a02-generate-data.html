@@ -76,6 +76,9 @@
 
     
     
+<p><strong>Note:</strong> Before running the code in this vignette, make
+sure you have installed and loaded all required packages. See the <a href="a01-getting-started.html">Getting Started</a> vignette for
+installation instructions.</p>
 <p>It is possible to calculate adherence without using
 generateChronicDrugExposure(). However guidelines are only provided for
 using with it.</p>
@@ -84,20 +87,21 @@ using with it.</p>
 </h2>
 <p>It is useful to restrict adherence calculations to only those
 individuals who belong to a specific cohort. AdherenceFromOMOP supports
-this directly through the <code>cohortSchema</code> and
-<code>cohortId</code> arguments in
-<strong>generateChronicDrugExposure()</strong></p>
+this directly through the <code>cohort</code> and <code>cohortId</code>
+arguments in <strong>generateChronicDrugExposure()</strong></p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># preparation, no need to replicate</span></span>
-<span><span class="va">cdm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mockAdherenceFromOMOP.html">mockAdherenceFromOMOP</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">cdm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mockDrugExposure.html">mockDrugExposure</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">cohort</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
+<span><span class="va">cohort_table</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  cohort_definition_id <span class="op">=</span> <span class="fl">1</span>, subject_id <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  cohort_start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"1980-01-01"</span><span class="op">)</span>,</span>
 <span>  cohort_end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html" class="external-link">as.Date</a></span><span class="op">(</span><span class="st">"2020-01-10"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbWriteTable.html" class="external-link">dbWriteTable</a></span><span class="op">(</span>conn <span class="op">=</span> <span class="fu">CDMConnector</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CDMConnector/reference/cdmCon.html" class="external-link">cdmCon</a></span><span class="op">(</span><span class="va">cdm</span><span class="op">)</span>, name <span class="op">=</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/Id.html" class="external-link">Id</a></span><span class="op">(</span>schema <span class="op">=</span> <span class="st">"main"</span>, table <span class="op">=</span> <span class="st">"cohort"</span><span class="op">)</span>, value <span class="op">=</span> <span class="va">cohort</span>, append <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbWriteTable.html" class="external-link">dbWriteTable</a></span><span class="op">(</span>conn <span class="op">=</span> <span class="fu">CDMConnector</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CDMConnector/reference/cdmCon.html" class="external-link">cdmCon</a></span><span class="op">(</span><span class="va">cdm</span><span class="op">)</span>, name <span class="op">=</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/Id.html" class="external-link">Id</a></span><span class="op">(</span>schema <span class="op">=</span> <span class="st">"main"</span>, table <span class="op">=</span> <span class="st">"cohort"</span><span class="op">)</span>, value <span class="op">=</span> <span class="va">cohort_table</span>, append <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cohort_ref</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/tbl.html" class="external-link">tbl</a></span><span class="op">(</span><span class="fu">CDMConnector</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CDMConnector/reference/cdmCon.html" class="external-link">cdmCon</a></span><span class="op">(</span><span class="va">cdm</span><span class="op">)</span>, <span class="st">"cohort"</span><span class="op">)</span></span></code></pre></div>
 <p>Only drug exposure events that satisfy the following conditions are
 included:</p>
 <ol style="list-style-type: decimal">
@@ -108,25 +112,27 @@ period</p></li>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">chronicDrugExposureCohort</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/generateChronicDrugExposure.html">generateChronicDrugExposure</a></span><span class="op">(</span></span>
 <span>  cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
-<span>  name <span class="op">=</span>  <span class="st">"test_table"</span>,</span>
+<span>  name <span class="op">=</span> <span class="st">"test_table"</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  cohortSchema <span class="op">=</span> <span class="st">"main"</span>,</span>
-<span>  cohortId <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cohort <span class="op">=</span> <span class="va">cohort_ref</span>,</span>
+<span>  cohortId <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="using-drugconceptidlist-variable">Using drugConceptIdList variable<a class="anchor" aria-label="anchor" href="#using-drugconceptidlist-variable"></a>
+<h2 id="using-conceptset-variable">Using conceptSet variable<a class="anchor" aria-label="anchor" href="#using-conceptset-variable"></a>
 </h2>
 <p>You may optionally restrict the included drug exposure events to a
 specific list of <strong>drug_concept_id</strong> values using the
-<code>drugConceptIdList</code> argument. This list can be generated
-manually or, more conveniently, with
+<code>conceptSet</code> argument. This list can be generated manually
+or, more conveniently, with
 <strong>CodelistGenerator::getDrugIngredientCodes()</strong>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ingredients</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span>
-<span><span class="va">medicationGroups</span> <span class="op">&lt;-</span> <span class="fu">CodelistGenerator</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a></span><span class="op">(</span>cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
-<span>                                                      name <span class="op">=</span> <span class="va">ingredients</span>,</span>
-<span>                                                      nameStyle <span class="op">=</span> <span class="st">"{concept_code}"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">ingredients</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">42899580</span>, <span class="fl">37498042</span><span class="op">)</span></span>
+<span><span class="va">medicationGroups</span> <span class="op">&lt;-</span> <span class="fu">CodelistGenerator</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a></span><span class="op">(</span></span>
+<span>  cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
+<span>  name <span class="op">=</span> <span class="va">ingredients</span>,</span>
+<span>  nameStyle <span class="op">=</span> <span class="st">"{concept_name}"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">ingredientNames</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">medicationGroups</span><span class="op">)</span></span>
 <span><span class="va">drug_concept_id_lst</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">medicationGroups</span>, use.names <span class="op">=</span> <span class="cn">F</span><span class="op">)</span></span></code></pre></div>
@@ -138,7 +144,7 @@ manually or, more conveniently, with
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Johannes Holm, Greete Kelli Aava.</p>
+  <p>Developed by Greete Kelli Aava, Johannes Holm.</p>
 </div>
 
 <div class="pkgdown-footer-right">

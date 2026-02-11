@@ -11,7 +11,7 @@ vignette: >
 
 ## Overview
 
-Medication adherence calculations depend on the **CMA** (Continuous Medication Availability) measure selected. **AdherenceFromOMOP** supports CMA types **1–9**. For examples illustrating the behavior of different CMA types, see the [Intro to CMA](#0){style="font-size: 11pt;"} tutorial. In this package calculateAdherenceSlidingWindow and calculateAdherence are wrappers for functions in [AdhereR](#0 "link to package"){style="font-size: 11pt;"} package.
+Medication adherence calculations depend on the **CMA** (Continuous Medication Availability) measure selected. **AdherenceFromOMOP** supports CMA types **1–9**. For examples illustrating the behavior of different CMA types, see the [Intro to CMA](a04-adherence.html) tutorial. This package provides wrappers for functions in [AdhereR](https://www.adherer.eu/) package to calculate adherence on OMOP CDM.
 
 For more detailed guidance, refer to the [AdhereR documentation](https://cran.r-project.org/web/packages/AdhereR/AdhereR.pdf "link to cran").
 
@@ -41,7 +41,7 @@ Below is an example of manually creating medication groups:
 ```{r, eval = FALSE}
 medicationGroup <- list(
   c(1361364),
-  c(1830280)   # vectors of drug_concept_ids
+  c(1830280) # vectors of drug_concept_ids
 )
 groupNames <- c("group1", "group2")
 
@@ -72,7 +72,7 @@ results
 
 ## Medication adherence with sliding window
 
-This approach computes adherence over a series of sliding windows within the observation period, allowing adherence to be examined over time. Unlike the AdhereR function output, window.ID values are not unique across all records for a given patient. They are assigned sequentially within each contiguous period without NA values and reset after gaps.
+This approach computes adherence over a series of sliding windows within the observation period, allowing adherence to be examined over time. Unlike the AdhereR function output, window.ID values are not unique across all records for a given patient. They are assigned sequentially within each continuous period without NA values and reset after gaps.
 
 ```{r, eval = FALSE, message = FALSE}
 results <- calculateAdherenceSlidingWindowBatched(drugExposure = chronicDrugExposure, cdm = cdm, name = "AdherenceFromOMOP_demo_sw", cma = c("CMA5"), delayObservationWindowStart = FALSE, medicationGroup = medicationGroup)
@@ -88,6 +88,7 @@ results_delayed <- calculateAdherenceSlidingWindowBatched(
   name = "AdherenceFromOMOP_demo_sw_delayed",
   cma = c("CMA5"),
   delayObservationWindowStart = TRUE,
+  # the following sets sliding window with duration of 1 year and step length of 1 year:
   sliding.window.duration = 1,
   sliding.window.duration.unit = c("days", "weeks", "months", "years")[4],
   sliding.window.step.duration = 1,

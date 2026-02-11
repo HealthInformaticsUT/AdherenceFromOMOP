@@ -3,8 +3,8 @@ Type: Package
 Title: Calculate medication adherence using data from OMOP CDM
 Version: 0.1.0
 Authors@R: c(
-    person("Johannes","Holm", , "yourself@somewhere.net", role = "aut"),
-    person("Greete Kelli","Aava", ,"greete.kelli.aava@ut.ee",role = "cre")
+    person("Greete Kelli","Aava", ,"greete.kelli.aava@ut.ee",role = c("cre", "aut")),
+    person("Johannes","Holm", , "yourself@somewhere.net", role = "aut")
   ) 
 Description: Adherence is a concept that indicates how well does the patient follow the healthcare provider's recommendation. Medication adherence specifically shows if the patient follows their medication regimen or are there any gaps. 
     This is important for medications which are meant to be consumed for chronic diseases, where the effecacy of the treatment is closely correlated with the continuity of medication consumption. One possibility to measure adherence is secondary database analysis. 

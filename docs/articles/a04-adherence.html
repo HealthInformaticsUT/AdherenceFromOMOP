@@ -76,6 +76,9 @@
 
     
     
+<p><strong>Note:</strong> Before running the code in this vignette, make
+sure you have installed and loaded all required packages. See the <a href="a01-getting-started.html">Getting Started</a> vignette for
+installation instructions.</p>
 <p>Medication adherence can be quantified in several different ways
 depending on how days supply, gaps, and observation periods are
 interpreted.<br>
@@ -255,7 +258,10 @@ event)</p>
 between first and last event)</strong>
 </li>
 </ul>
-<p><img src="a04-adherence_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<div class="float">
+<img src="figs/fig_cma1.png" alt="FIGURE 1 - Example of CMA1 graph, visualised with AdhereR"><div class="figcaption">FIGURE 1 - Example of CMA1 graph, visualised
+with AdhereR</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="cma2">CMA2<a class="anchor" aria-label="anchor" href="#cma2"></a>
@@ -268,7 +274,10 @@ observation window end</p>
 event → observation window end)</strong>
 </li>
 </ul>
-<p><img src="a04-adherence_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
+<div class="float">
+<img src="figs/fig_cma2.png" alt="FIGURE 2 - Example of CMA2 graph, visualised with AdhereR"><div class="figcaption">FIGURE 2 - Example of CMA2 graph, visualised
+with AdhereR</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="cma-3-4">CMA 3 &amp; 4<a class="anchor" aria-label="anchor" href="#cma-3-4"></a>
@@ -286,8 +295,8 @@ accumulated gap time.</p>
 <li><p>Events that start before observation window are not
 included</p></li>
 <li>
-<p>Computes: <strong>(number of days of theoretical use) / (days
-between first and last event)</strong></p>
+<p>Computes: <strong>(number of days covered between first and last
+event) / (days between first and last event)</strong></p>
 <ul>
 <li>Theoretical use for sample patient number 1: 30 + 90 + 90. The start
 of the last event cuts off the length of the second from last event. In
@@ -295,7 +304,10 @@ CMA1 the second from last event is included entirely.</li>
 </ul>
 </li>
 </ul>
-<p><img src="a04-adherence_files/figure-html/unnamed-chunk-5-1.png" width="700"></p>
+<div class="float">
+<img src="figs/fig_cma5.png" alt="FIGURE 3 - Example of CMA5 graph, visualised with AdhereR"><div class="figcaption">FIGURE 3 - Example of CMA5 graph, visualised
+with AdhereR</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="cma6">CMA6<a class="anchor" aria-label="anchor" href="#cma6"></a>
@@ -305,14 +317,18 @@ observation window. Equivalent to 1 – CMA2 but computed using
 theoretical use and accumulated gap time.</p>
 <ul>
 <li>Events that start before observation window are not included</li>
-<li>Computes: <strong>(number of days of theoretical use) / (days
-between first and last event)</strong>
+<li>Computes: <strong>(number of days covered between first event and
+end of observation window) / (days between first event and observation
+window)</strong>
 <ul>
 <li>Theoretical use for sample patient number 1: 30 + 90 + 90 + 36.</li>
 </ul>
 </li>
 </ul>
-<p><img src="a04-adherence_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<div class="float">
+<img src="figs/fig_cma6.png" alt="FIGURE 4 - Example of CMA6 graph, visualised with AdhereR"><div class="figcaption">FIGURE 4 - Example of CMA6 graph, visualised
+with AdhereR</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="cma7">CMA7<a class="anchor" aria-label="anchor" href="#cma7"></a>
@@ -322,33 +338,35 @@ anchoring on first event. This measures adherence relative to the entire
 observation period.</p>
 <ul>
 <li>Includes events from before the observation period starts</li>
-<li>Computes: <strong>(number of days of theoretical use) / (number of
-days in observation window)</strong>
+<li>Computes: <strong>(number of days covered in observation window) /
+(number of days in observation window)</strong>
 <ul>
 <li>Theoretical use for sample patient number 1: 25 + 30 + 90 + 90 +
 36.</li>
 </ul>
 </li>
 </ul>
-<p><img src="a04-adherence_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
-</div>
-<div class="section level2">
-<h2 id="cma8">CMA8<a class="anchor" aria-label="anchor" href="#cma8"></a>
-</h2>
+<p><img src="figs/fig_cma7.png" alt="FIGURE 5 - Example of CMA7 graph, visualised with AdhereR"> ##
+CMA8</p>
 <p>Lagged version of CMA7. The observation window starts after a short
 “lag” from the event that starts before the observation window. Useful
 when excluding an initial adjustment period.</p>
 <ul>
 <li>
-<p>Computes: <strong>(number of days of theoretical use) / (lagged
-start to end of observation window)</strong></p>
+<p>Computes: <strong>(number of days covered between first event and
+end of observation window) / (lagged start to end of observation
+window)</strong></p>
 <ul>
 <li>Number of days accounting for lagged start for patient 1: 481 -
 25.</li>
+<li>Theoretical use for sample patient 1: 30 + 90 + 90 + 36.</li>
 </ul>
 </li>
 </ul>
-<p><img src="a04-adherence_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
+<div class="float">
+<img src="figs/fig_cma8.png" alt="FIGURE 6 - Example of CMA8 graph, visualised with AdhereR"><div class="figcaption">FIGURE 6 - Example of CMA8 graph, visualised
+with AdhereR</div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="cma9">CMA9<a class="anchor" aria-label="anchor" href="#cma9"></a>
@@ -382,7 +400,10 @@ end of the observation window.</p></li>
 </ul>
 </li>
 </ul>
-<p><img src="a04-adherence_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<div class="float">
+<img src="figs/fig_cma9.png" alt="FIGURE 7 - Example of CMA9 graph, visualised with AdhereR"><div class="figcaption">FIGURE 7 - Example of CMA9 graph, visualised
+with AdhereR</div>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -391,7 +412,7 @@ end of the observation window.</p></li>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Johannes Holm, Greete Kelli Aava.</p>
+  <p>Developed by Greete Kelli Aava, Johannes Holm.</p>
 </div>
 
 <div class="pkgdown-footer-right">

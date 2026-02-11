@@ -42,9 +42,11 @@ statiinid <- c("Atorvastatin", "Rosuvastatin", "Simvastatin", "Pravastatin", "Fl
 ## Adherence for each statin group
 
 ```{r, eval=FALSE}
-medicationGroups <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm,
-                                                      name = statiinid,
-                                                      nameStyle = "{concept_code}")
+medicationGroups <- CodelistGenerator::getDrugIngredientCodes(
+  cdm = cdm,
+  name = statiinid,
+  nameStyle = "{concept_name}"
+)
 
 ingredientNames <- names(medicationGroups)
 concepts <- unlist(medicationGroups, use.names = F)
@@ -135,13 +137,14 @@ adherenceCMA5SW <- calculateAdherenceSlidingWindowBatched(
   medicationGroup = medicationGroups,
   name = "statins_study_1688_medgroups_sw",
   cma = "CMA5",
-  sliding.window.start = 0,
-  sliding.window.start.unit = c("days", "weeks", "months", "years")[1],
+  # the following sets sliding window with duration of 3 years and step length of 3 years:
   sliding.window.duration = 3,
   sliding.window.duration.unit = c("days", "weeks", "months", "years")[4],
   sliding.window.step.duration = 3,
   sliding.window.step.unit = c("days", "weeks", "months", "years")[4]
 )
+
+adherenceCMA5SW <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups_sw", CDMConnector::dbms(db)))
 ```
 
 ## Add cohorts and data
@@ -160,7 +163,7 @@ cma_values_with_cohort_features <- addCohorts(adherenceCMA5, cohortTable)
 Adding body mass index is a separate function.
 
 ```{r, eval=FALSE}
-cma_data_with_bmi <- addBMI(adherenceCMA5, cdm)
+cma_data_with_bmi <- addBMI(adherenceCMA5SW, cdm)
 ```
 
 To get an overview this function reports the number of individuals in three groups:
@@ -171,8 +174,9 @@ To get an overview this function reports the number of individuals in three grou
 (3) individuals who have at least *n* drug exposure records within a given calendar year, calculated from the generated drug exposure table.
 
 ```{r, eval = FALSE}
-stats <- summarisePatientCounts(cdm = cdm,
-                        adherenceData = adherenceCMA5,
-                        drugExposure = all_statins)
-
+stats <- summarisePatientCounts(
+  cdm = cdm,
+  adherenceData = adherenceCMA5SW,
+  drugExposure = all_statins_cohort
+)
 ```

@@ -19,3 +19,18 @@ Adherence data with BMI category information added.
 \description{
 adds bmi values to CMA values
 }
+\examples{
+\dontrun{
+cdm <- mockDrugExposure()
+chronicDrugExposure <- generateChronicDrugExposure(
+  cdm = cdm,
+  name = "chronic_drug_exposure_table",
+  overwrite = T
+)
+CMA_values <- calculateAdherenceBatched(
+  drugExposure = chronicDrugExposure,
+  cdm = cdm, cma = "CMA5"
+)
+withBMI <- addBMI(CMA_values, cdm)
+}
+}

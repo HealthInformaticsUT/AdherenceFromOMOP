@@ -32,25 +32,8 @@ Data Model. The package supports:
 ### Install package
 
 ``` r
-# Install AdherenceFromOMOP
 devtools::install_github("https://github.com/HealthInformaticsUT/AdherenceFromOMOP/")
-
-# Install required dependencies
-install.packages(c("dplyr", "DBI", "cli", "rlang", "magrittr", "tidyr", "lubridate", "data.table"))
-install.packages("RPostgres")  # For PostgreSQL
-install.packages("duckdb")     # For DuckDB
-install.packages("remotes")
-remotes::install_github("darwin-eu/CDMConnector")
-remotes::install_github("darwin-eu/CodelistGenerator")
-remotes::install_github("darwin-eu/PatientProfiles")
-install.packages("AdhereR")
-
-# Load libraries
 library(AdherenceFromOMOP)
-library(CDMConnector)
-library(CodelistGenerator)
-library(dplyr)
-library(DBI)
 ```
 
 ### Database connection with CDMConnector
@@ -87,8 +70,8 @@ data must be retrieved and written to a designated table in the
 database.
 
 To extract the necessary data, use generateChronicDrugExposure. For
-conceptSet input variable, which expects drug_concept_id values
-in a list, it is recommended to use
+conceptSet input variable, which expects drug_concept_id values in a
+list, it is recommended to use
 [CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
 
 ``` r

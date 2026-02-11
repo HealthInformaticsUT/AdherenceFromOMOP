@@ -18,39 +18,6 @@ vignette: >
 devtools::install_github("https://github.com/HealthInformaticsUT/AdherenceFromOMOP/")
 ```
 
-### Install required dependencies
-
-AdherenceFromOMOP requires several packages that may not be automatically installed. Install them with:
-
-```{r, eval = FALSE}
-# Core dependencies
-install.packages(c("dplyr", "DBI", "cli", "rlang", "magrittr", "tidyr", "lubridate", "data.table"))
-
-# Database connectors (install the one you need)
-install.packages("RPostgres")  # For PostgreSQL
-install.packages("duckdb")     # For DuckDB (useful for testing)
-
-# OMOP-related packages
-install.packages("remotes")
-remotes::install_github("darwin-eu/CDMConnector")
-remotes::install_github("darwin-eu/CodelistGenerator")
-remotes::install_github("darwin-eu/PatientProfiles")
-remotes::install_github("darwin-eu/omopgenerics")
-
-# Adherence calculation engine
-install.packages("AdhereR")
-```
-
-### Load required libraries
-
-```{r, eval = FALSE}
-library(AdherenceFromOMOP)
-library(CDMConnector)
-library(CodelistGenerator)
-library(dplyr)
-library(DBI)
-```
-
 ## Database connection with CDMConnector
 
 AdherenceFromOMOP relies on CDMConnector for database connection and other options are currently unavailable.
@@ -91,7 +58,7 @@ To extract the necessary data, use generateChronicDrugExposure. For conceptSet i
 
 ```{r, eval = FALSE, echo=TRUE, message = FALSE}
 # recommended method for acquiring drug_concept_id values
-drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c(42899580, 37498042))
+drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c(42899580, 37498042), nameStyle = "{concept_name}")
 
 # Step 1 - data generation
 chronicDrugExposure <- generateChronicDrugExposure(
@@ -107,6 +74,7 @@ chronicDrugExposure
 Medication groups can be defined to calculate adherence by therapeutic category. Here, we reuse the earlier drugIngredientCodes object. To compute adherence, for large datasets use the batched functions.
 
 ```{r, eval = FALSE, message = FALSE}
+# Step 2 - calculating adherence
 adherence <- calculateAdherenceBatched(
   drugExposure = chronicDrugExposure,
   cdm = cdm,
@@ -131,8 +99,10 @@ cma_with_bmi <- addBMI(adherence, cdm)
 
 ### Adding cohort as columns
 
+Collect necessary cohorts beforehand, for example to the ./inst folder.
+
 ```{r,eval = FALSE}
-pathToCohorts <- paste0(getwd(),"/inst/") # path to cohorts 
+pathToCohorts <- paste0(getwd(), "/inst/") # path to cohort definitions
 
 cohortSet <- CDMConnector::readCohortSet(pathToCohorts)
 cdm <- CDMConnector::generateCohortSet(cdm, cohortSet, name = "cohort")
@@ -146,5 +116,4 @@ adherence_with_cohorts_as_features <- addCohorts(adherence, cohort, cohortIdMapp
 
 ```{r, eval = FALSE}
 stats <- summarisePatientCounts(cdm = cdm, drugExposure = chronicDrugExposure, adherenceData = adherence)
-
 ```

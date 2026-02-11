@@ -24,12 +24,15 @@ Required columns: person_id, drug_concept_id, drug_exposure_start_date, days_sup
 
 \item{cdm}{(`cdm_reference`) A CDM reference object created with CDMConnector.}
 
-\item{cohort}{(`tbl` or `NULL`) Optional cohort table reference for additional counts.}
+\item{cohort}{(`tbl` or `NULL`) Optional cohort table reference
+for additional counts.}
 
-\item{cohortId}{(`numeric` or `NULL`) Optional vector of cohort_definition_id values.}
+\item{cohortId}{(`numeric` or `NULL`) Optional vector of
+cohort_definition_id values.}
 
-\item{n}{(`numeric(1)`) Minimum number of rows per year for a person to be included
-in 'Yearly drug exposure record count' table. Default: 1.}
+\item{n}{(`numeric(1)`) Minimum number of rows per year for a person
+to be included
+ in 'Yearly drug exposure record count' table. Default: 1.}
 }
 \value{
 Named list with patient count summaries.

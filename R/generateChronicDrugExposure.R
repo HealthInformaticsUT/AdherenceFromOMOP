@@ -5,7 +5,7 @@
 #' @inheritParams conceptSetDoc
 #' @inheritParams indexDateDoc
 #'
-#' @param overwrite (`logical(1)`) If table with provided name exists, should it be overwritten?
+#' @param overwrite If table with provided name exists, should it be overwritten?
 #'   Default: `FALSE`.
 #' @param subjects (`numeric` or `NULL`) Optional vector of person_id values to restrict
 #'   the drug exposure data to specific subjects.
@@ -17,7 +17,7 @@
 #'
 #' @return A database table reference containing drug exposure records with patient information.
 #'   Columns include: person_id, drug_concept_id, drug_exposure_start_date, days_supply,
-#'   date_of_birth, sex, days_to_death, observation_period_start_date, observation_period_end_date.
+#'   date_of_birth, sex, date_of_death, observation_period_start_date, observation_period_end_date.
 #'
 #' @export
 #'
@@ -67,7 +67,7 @@ generateChronicDrugExposure <- function(cdm,
     dplyr::inner_join(cdm$observation_period, by = c("person_id")) %>%
     PatientProfiles::addDateOfBirth() %>%
     PatientProfiles::addSex() %>%
-    PatientProfiles::addDeathDays(indexDate = indexDate) %>%
+    PatientProfiles::addDeathDate(indexDate = indexDate) %>%
     dplyr::select(
       person_id,
       drug_concept_id,
@@ -79,9 +79,9 @@ generateChronicDrugExposure <- function(cdm,
       # route_source_value,
       date_of_birth,
       sex,
-      days_to_death,
-      observation_period_end_date,
-      observation_period_start_date
+      date_of_death,
+      observation_period_start_date,
+      observation_period_end_date
     ) %>%
     dplyr::compute(
       name = name,
@@ -144,12 +144,13 @@ generateChronicDrugExposure <- function(cdm,
     data <- filteredData
   }
 
-  chronicDrugExposure <- data %>% dplyr::compute(
-    name = name,
-    temporary = FALSE,
-    schema = CDMConnector::cdmWriteSchema(cdm),
-    overwrite = TRUE
-  )
+  chronicDrugExposure <- data %>%
+    dplyr::compute(
+      name = name,
+      temporary = FALSE,
+      schema = CDMConnector::cdmWriteSchema(cdm),
+      overwrite = TRUE
+    )
 
   return(chronicDrugExposure)
 }
