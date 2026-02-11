@@ -1,30 +1,23 @@
-#' Create a mock OMOP CDM database for testing adherence calculations
+#' Mock database for testing package
 #'
-#' Generates a synthetic OMOP CDM database in DuckDB with all tables required for
-#' adherence calculations: person, observation_period, drug_exposure, measurement,
-#' death, and vocabulary tables. The drug_exposure table is populated with computed
-#' days_supply values. Useful for unit testing and demonstrating package functionality
-#' without requiring access to real patient data.
+#' Creates a mock CDM database with drug exposure data for testing and examples.
 #'
-#' @param nPerson Integer specifying the number of synthetic patients to generate.
-#'   Passed to omock::mockPerson. Default is 5.
-#' @param recordPerson Integer specifying the number of drug exposure and measurement
-#'   records to generate per person. Passed to omock::mockDrugExposure and
-#'   omock::mockMeasurement. Default is 3.
-#' @param dbms Database management system connection object. Currently only DuckDB
-#'   is supported. Default is duckdb::duckdb().
+#' @param nPerson (`numeric(1)`) Number of persons to generate in the mock database.
+#'   Default: 5.
+#' @param recordPerson (`numeric(1)`) Number of drug exposure records per person.
+#'   Default: 3.
+#' @param dbms Database management system driver. Default: `duckdb::duckdb()`.
 #'
-#' @returns A cdm_reference object connected to an in-memory DuckDB database containing
-#'   synthetic OMOP CDM tables. The write schema is set to "main" with prefix "adherencemock_".
+#' @returns A `cdm_reference` object with mock tables including person, drug_exposure,
+#'   observation_period, measurement, and death tables.
 #'
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' cdm <- mockAdherenceFromOMOP()
-#' cdm <- mockAdherenceFromOMOP(nPerson = 10, recordPerson = 5)
+#' cdm <- mockDrugExposure()
 #' }
-mockAdherenceFromOMOP <- function(nPerson = 5, recordPerson = 3, dbms = duckdb::duckdb()) {
+mockDrugExposure <- function(nPerson = 5, recordPerson = 3, dbms = duckdb::duckdb()) {
   cdm <- omopgenerics::emptyCdmReference(cdmName = "mock")
 
   cdm <- cdm %>%

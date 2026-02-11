@@ -2,80 +2,63 @@
 % Please edit documentation in R/generateChronicDrugExposure.R
 \name{generateChronicDrugExposure}
 \alias{generateChronicDrugExposure}
-\title{Generate drug exposure data for adherence calculations}
+\title{Get drug exposure entries for adherence calculations}
 \usage{
 generateChronicDrugExposure(
   cdm,
   name = "adherenceFromOMOP",
-  indexDateForPatientCalculation = "drug_exposure_start_date",
+  conceptSet = NULL,
+  indexDate = "drug_exposure_start_date",
   overwrite = FALSE,
   subjects = NULL,
-  drugConceptIdList = NULL,
-  cohortSchema = NULL,
+  cohort = NULL,
   cohortId = NULL,
-  cohortTableName = "cohort",
   ...
 )
 }
 \arguments{
-\item{cdm}{A cdm_reference object created by CDMConnector, providing access to
-OMOP CDM tables including drug_exposure, person, observation_period, and concept.}
+\item{cdm}{(`cdm_reference`) A CDM reference object created with CDMConnector.}
 
-\item{name}{Character string specifying the name for the output table in the
-CDM write schema. Default is "adherenceFromOMOP".}
+\item{name}{(`character(1)`) Name for the output table in the database.}
 
-\item{indexDateForPatientCalculation}{Default is "drug_exposure_start_date".}
+\item{conceptSet}{(`list`, `codelist`, or `NULL`) Named list of drug concept IDs.
+Recommended to use [CodelistGenerator::getDrugIngredientCodes()].
+If `NULL`, all drugs in the drug_exposure table are included.}
 
-\item{overwrite}{Logical. If TRUE, overwrites existing table with the same name.
-If FALSE and table exists, returns NULL with a warning. Default is FALSE.}
+\item{indexDate}{(`character(1)`) Name of the column to use as the index date
+for patient-level calculations. Default: `"drug_exposure_start_date"`.}
 
-\item{subjects}{Optional numeric vector of person_id values to include. If NULL,
-all subjects are included. Useful for testing or analyzing specific patients.}
+\item{overwrite}{If table with provided name exists, should it be overwritten?
+Default: `FALSE`.}
 
-\item{drugConceptIdList}{Optional numeric vector of drug_concept_id values to filter
-drug exposure records. If NULL, all drug exposures are included.}
+\item{subjects}{(`numeric` or `NULL`) Optional vector of person_id values to restrict
+the drug exposure data to specific subjects.}
 
-\item{cohortSchema}{Optional character string specifying the database schema containing
-a cohort table. When provided with cohortId, only drug exposures within cohort
-periods are included.}
+\item{cohort}{(`tbl` or `NULL`) Optional cohort table reference to filter drug exposures.
+Only drug exposures for subjects in the cohort and within the cohort period will be included.}
 
-\item{cohortId}{Optional numeric vector of cohort_definition_id values to filter patients.
-Used together with cohortSchema to restrict to patients in specific cohorts.}
+\item{cohortId}{(`numeric` or `NULL`) If `cohort` is provided, optional vector of
+cohort_definition_id values to use. If `NULL`, all cohorts in the table are used.}
 
-\item{cohortTableName}{Character string specifying the cohort table name in cohortSchema.
-Default is "cohort".}
-
-\item{...}{Additional arguments (currently unused, reserved for future extensions).}
+\item{...}{Additional arguments (currently unused).}
 }
 \value{
-A database table reference containing drug exposure records with columns:
-  person_id, drug_concept_id, drug_exposure_start_date, days_supply, date_of_birth,
-  sex, date_0f_death, observation_period_start_date, observation_period_end_date.
-  When cohortSchema is used, also includes cohort_start_date and cohort_end_date.
-  Returns NULL if validation fails or no records match the criteria.
+A database table reference containing drug exposure records with patient information.
+  Columns include: person_id, drug_concept_id, drug_exposure_start_date, days_supply,
+  date_of_birth, sex, date_of_death, observation_period_start_date, observation_period_end_date.
 }
 \description{
-Extracts and prepares drug exposure records from an OMOP CDM database for use
-in medication adherence calculations. Joins drug exposure data with patient
-demographics (date of birth, sex, days to death) and observation period information.
-Optionally filters by specific drug concepts or cohort membership.
+Get drug exposure entries for adherence calculations
 }
 \examples{
 \dontrun{
-cdm <- mockAdherenceFromOMOP()
+cdm <- mockDrugExposure()
+conceptSet <- CodelistGenerator::getDrugIngredientCodes(cdm, name = "Atorvastatin")
 
-# Include all drugs
-chronicDrugExposure <- generateChronicDrugExposure(
+drugExposure <- generateChronicDrugExposure(
   cdm = cdm,
-  name = "chronic_drug_exposure_table",
-  overwrite = TRUE
-)
-
-# Filter by specific drug concepts
-chronicDrugExposure <- generateChronicDrugExposure(
-  cdm = cdm,
-  drugConceptIdList = c(1234567, 2345678),
-  name = "filtered_exposure",
+  conceptSet = conceptSet,
+  name = "chronic_drug_exposure",
   overwrite = TRUE
 )
 }

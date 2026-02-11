@@ -13,26 +13,21 @@ knitr::opts_chunk$set(
 
 # Adherence from OMOP
 
-
 ## Overview
 
-Adherence is a concept that indicates how well does the patient follow the healthcare provider's recommendation. Medication adherence specifically shows if the patient follows their medication regimen or are there any gaps. 
-This is important for medications which are meant to be consumed for chronic diseases, where the efficacy of the treatment is closely correlated with the continuity of medication consumption. One possibility to measure adherence is secondary database analysis. 
+Adherence is a concept that indicates how well does the patient follow the healthcare provider's recommendation. Medication adherence specifically shows if the patient follows their medication regimen or are there any gaps. This is important for medications which are meant to be consumed for chronic diseases, where the efficacy of the treatment is closely correlated with the continuity of medication consumption. One possibility to measure adherence is secondary database analysis.
 
 AdherenceFromOMOP contains functions to measure chronic medication adherence using drug_exposure table in data mapped to the OMOP Common Data Model. The package supports:
 
-- generating drug exposure records for cohorts and/or specific
-  medications
+-   generating drug exposure records for cohorts and/or specific medications
 
-- calculating medication adherence for observation period
+-   calculating medication adherence for observation period
 
-- calculating medication adherence using sliding window approach to view
-  specific periods in observation period
+-   calculating medication adherence using sliding window approach to view specific periods in observation period
 
-- add cohort features as columns to data returned by adherence functions
+-   add cohort features as columns to data returned by adherence functions
 
-- view the number of people in areas of interest
-
+-   view the number of people in areas of interest
 
 ## Getting started with the basics
 
@@ -73,17 +68,16 @@ cdm <- CDMConnector::cdmFromCon(
 
 Using adherenceFromOMOP involves two main steps. First, the required data must be retrieved and written to a designated table in the database.
 
-To extract the necessary data, use generateChronicDrugExposure. For drugConceptIdList input variable, which expects drug_concept_id values in a list, it is recommended to use [CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
+To extract the necessary data, use generateChronicDrugExposure. For conceptSet input variable, which expects drug_concept_id values in a list, it is recommended to use [CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
 
 ```{r, eval = FALSE, echo=TRUE, message = FALSE}
 # recommended method for acquiring drug_concept_id values
-drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"))
-concepts_ids <- unlist(drugIngredientCodes, use.names = F)
+drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"), nameStyle = "{concept_name}")
 
 # Step 1 - data generation
 chronicDrugExposure <- generateChronicDrugExposure(
   cdm = cdm,
-  drugConceptIdList = concepts_ids,
+  conceptSet = drugIngredientCodes,
   name = "chronic_drug_exposure_table",
   overwrite = T
 )
@@ -92,8 +86,6 @@ chronicDrugExposure
 ```
 
 ```{r, eval = FALSE}
-adherence <- adherenceCalculations(data = chronicDrugExposure, cdm, cma = c("CMA5"))
+adherence <- calculateAdherence(drugExposure = chronicDrugExposure, cma = c("CMA5"))
+adherence
 ```
-
-
-

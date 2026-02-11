@@ -70,19 +70,18 @@ data must be retrieved and written to a designated table in the
 database.
 
 To extract the necessary data, use generateChronicDrugExposure. For
-drugConceptIdList input variable, which expects drug_concept_id values
-in a list, it is recommended to use
+conceptSet input variable, which expects drug_concept_id values in a
+list, it is recommended to use
 [CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
 
 ``` r
 # recommended method for acquiring drug_concept_id values
 drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"))
-concepts_ids <- unlist(drugIngredientCodes, use.names = F)
 
 # Step 1 - data generation
 chronicDrugExposure <- generateChronicDrugExposure(
   cdm = cdm,
-  drugConceptIdList = concepts_ids,
+  conceptSet = drugIngredientCodes,
   name = "chronic_drug_exposure_table",
   overwrite = T
 )
@@ -91,5 +90,5 @@ chronicDrugExposure
 ```
 
 ``` r
-adherence <- adherenceCalculations(data = chronicDrugExposure, cdm, cma = c("CMA5"))
+adherence <- calculateAdherence(drugExposure = chronicDrugExposure, cdm = cdm, cma = c("CMA5"))
 ```

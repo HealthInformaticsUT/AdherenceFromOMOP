@@ -1,29 +1,19 @@
-#' Generate drug exposure data for adherence calculations
+#' Get drug exposure entries for adherence calculations
 #'
-#' Extracts and prepares drug exposure records from an OMOP CDM database for use
-#' in medication adherence calculations. Joins drug exposure data with patient
-#' demographics (date of birth, sex, date of death) and observation period information.
-#' Optionally filters by specific drug concepts or cohort membership.
+#' @inheritParams cdmDoc
+#' @inheritParams nameDoc
+#' @inheritParams conceptSetDoc
+#' @inheritParams indexDateDoc
 #'
-#' @param cdm A cdm_reference object created by CDMConnector, providing access to
-#'   OMOP CDM tables including drug_exposure, person, observation_period, and concept.
-#' @param name Character string specifying the name for the output table in the
-#'   CDM write schema. Default is "adherenceFromOMOP".
-#' @param indexDateForPatientCalculation Default is "drug_exposure_start_date".
-#' @param overwrite Logical. If TRUE, overwrites existing table with the same name.
-#'   If FALSE and table exists, returns NULL with a warning. Default is FALSE.
-#' @param subjects Optional numeric vector of person_id values to include. If NULL,
-#'   all subjects are included. Useful for testing or analyzing specific patients.
-#' @param drugConceptIdList Optional numeric vector of drug_concept_id values to filter
-#'   drug exposure records. If NULL, all drug exposures are included.
-#' @param cohortSchema Optional character string specifying the database schema containing
-#'   a cohort table. When provided with cohortId, only drug exposures within cohort
-#'   periods are included.
-#' @param cohortId Optional numeric vector of cohort_definition_id values to filter patients.
-#'   Used together with cohortSchema to restrict to patients in specific cohorts.
-#' @param cohortTableName Character string specifying the cohort table name in cohortSchema.
-#'   Default is "cohort".
-#' @param ... Additional arguments (currently unused, reserved for future extensions).
+#' @param overwrite If table with provided name exists, should it be overwritten?
+#'   Default: `FALSE`.
+#' @param subjects (`numeric` or `NULL`) Optional vector of person_id values to restrict
+#'   the drug exposure data to specific subjects.
+#' @param cohort (`tbl` or `NULL`) Optional cohort table reference to filter drug exposures.
+#'   Only drug exposures for subjects in the cohort and within the cohort period will be included.
+#' @param cohortId (`numeric` or `NULL`) If `cohort` is provided, optional vector of
+#'   cohort_definition_id values to use. If `NULL`, all cohorts in the table are used.
+#' @param ... Additional arguments (currently unused).
 #'
 #' @return A database table reference containing drug exposure records with columns:
 #'   person_id, drug_concept_id, drug_exposure_start_date, days_supply, date_of_birth,
@@ -35,32 +25,24 @@
 #'
 #' @examples
 #' \dontrun{
-#' cdm <- mockAdherenceFromOMOP()
+#' cdm <- mockDrugExposure()
+#' conceptSet <- CodelistGenerator::getDrugIngredientCodes(cdm, name = "Atorvastatin")
 #'
-#' # Include all drugs
-#' chronicDrugExposure <- generateChronicDrugExposure(
+#' drugExposure <- generateChronicDrugExposure(
 #'   cdm = cdm,
-#'   name = "chronic_drug_exposure_table",
-#'   overwrite = TRUE
-#' )
-#'
-#' # Filter by specific drug concepts
-#' chronicDrugExposure <- generateChronicDrugExposure(
-#'   cdm = cdm,
-#'   drugConceptIdList = c(1234567, 2345678),
-#'   name = "filtered_exposure",
+#'   conceptSet = conceptSet,
+#'   name = "chronic_drug_exposure",
 #'   overwrite = TRUE
 #' )
 #' }
 generateChronicDrugExposure <- function(cdm,
                                         name = "adherenceFromOMOP",
-                                        indexDateForPatientCalculation = "drug_exposure_start_date",
+                                        conceptSet = NULL,
+                                        indexDate = "drug_exposure_start_date",
                                         overwrite = FALSE,
                                         subjects = NULL,
-                                        drugConceptIdList = NULL,
-                                        cohortSchema = NULL,
+                                        cohort = NULL,
                                         cohortId = NULL,
-                                        cohortTableName = "cohort",
                                         ...) {
   if (name %in% (!name %in% CDMConnector::listTables(CDMConnector::cdmCon(cdm), schema = CDMConnector::cdmWriteSchema(cdm))) &
     !overwrite) {
@@ -69,14 +51,15 @@ generateChronicDrugExposure <- function(cdm,
   }
 
 
-  if (is.null(drugConceptIdList)) {
+  if (is.null(conceptSet)) {
     cli::cli_alert_info("Drug concept ids not provided, all drugs included.")
 
     data <- cdm$drug_exposure
   } else {
     cli::cli_alert_info("Using the drug concept id list")
 
-    data <- dplyr::filter(cdm$drug_exposure, drug_concept_id %in% drugConceptIdList)
+    conceptIds <- unlist(conceptSet, use.names = FALSE)
+    data <- dplyr::filter(cdm$drug_exposure, drug_concept_id %in% conceptIds)
   }
 
   cli::cli_alert_info("Using Patient Profiles package to add patient data.")
@@ -86,8 +69,7 @@ generateChronicDrugExposure <- function(cdm,
     dplyr::inner_join(cdm$observation_period, by = c("person_id")) %>%
     PatientProfiles::addDateOfBirth() %>%
     PatientProfiles::addSex() %>%
-    #PatientProfiles::addDeathDays(indexDate = indexDateForPatientCalculation) %>%
-    PatientProfiles::addDeathDate(indexDate = indexDateForPatientCalculation) %>%
+    PatientProfiles::addDeathDate(indexDate = indexDate) %>%
     dplyr::select(
       person_id,
       drug_concept_id,
@@ -99,10 +81,9 @@ generateChronicDrugExposure <- function(cdm,
       # route_source_value,
       date_of_birth,
       sex,
-      #days_to_death,
       date_of_death,
-      observation_period_end_date,
-      observation_period_start_date
+      observation_period_start_date,
+      observation_period_end_date
     ) %>%
     dplyr::compute(
       name = name,
@@ -111,39 +92,25 @@ generateChronicDrugExposure <- function(cdm,
       overwrite = TRUE
     )
 
-  if (!is.null(cohortSchema)) {
-    connection <- CDMConnector::cdmCon(cdm)
-    cohort <- dplyr::tbl(connection, CDMConnector::inSchema(cohortSchema, cohortTableName)) %>%
-      dplyr::filter(cohort_definition_id %in% cohortId)
+  if (!is.null(cohort)) {
+    cohortFiltered <- cohort
 
-    if (nrow(dplyr::collect(cohort, n = 1)) < 1) {
-      cli::cli_alert_warning("Check again, cohort seems empty. Numer of rows is less than 1.")
+    if (!is.null(cohortId)) {
+      cohortFiltered <- cohortFiltered %>%
+        dplyr::filter(cohort_definition_id %in% cohortId)
+    }
+
+    if (nrow(dplyr::collect(cohortFiltered, n = 1)) < 1) {
+      cli::cli_alert_warning("Cohort is empty after filtering. No records to process.")
       return(NULL)
     }
 
     data <- data %>%
-      dplyr::inner_join(cohort, dplyr::join_by(x$person_id == y$subject_id)) %>%
+      dplyr::inner_join(cohortFiltered, dplyr::join_by(x$person_id == y$subject_id)) %>%
       dplyr::filter(
         drug_exposure_start_date >= cohort_start_date &
           drug_exposure_start_date <= cohort_end_date
-      ) # %>%
-    # dplyr::select(
-    #   person_id,
-    #   drug_concept_id,
-    #   #concept_name,
-    #   drug_exposure_start_date,
-    #   days_supply,
-    #   #visit_occurrence_id,
-    #   #route_concept_id,
-    #   #route_source_value,
-    #   date_of_birth,
-    #   sex,
-    #   days_to_death,
-    #   cohort_start_date,
-    #   cohort_end_date,
-    #   observation_period_end_date,
-    #   observation_period_start_date
-    # )
+      )
   }
 
   # important that days supply values exceed 0
@@ -179,12 +146,13 @@ generateChronicDrugExposure <- function(cdm,
     data <- filteredData
   }
 
-  chronicDrugExposure <- data %>% dplyr::compute(
-    name = name,
-    temporary = FALSE,
-    schema = CDMConnector::cdmWriteSchema(cdm),
-    overwrite = TRUE
-  )
+  chronicDrugExposure <- data %>%
+    dplyr::compute(
+      name = name,
+      temporary = FALSE,
+      schema = CDMConnector::cdmWriteSchema(cdm),
+      overwrite = TRUE
+    )
 
   return(chronicDrugExposure)
 }

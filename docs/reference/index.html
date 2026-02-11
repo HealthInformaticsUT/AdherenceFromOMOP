@@ -60,7 +60,7 @@
           <code><a href="generateChronicDrugExposure.html">generateChronicDrugExposure()</a></code>
 
         </dt>
-        <dd>Generate drug exposure data for adherence calculations</dd>
+        <dd>Get drug exposure entries for adherence calculations</dd>
       </dl></div><div class="section level2">
 
       <h3 id="adherence-calculations">Adherence calculations<a class="anchor" aria-label="anchor" href="#adherence-calculations"></a></h3>
@@ -74,28 +74,28 @@
 
       <dl><dt>
 
-          <code><a href="adherenceCalculationsLoader.html">adherenceCalculationsLoader()</a></code>
+          <code><a href="calculateAdherenceBatched.html">calculateAdherenceBatched()</a></code>
 
         </dt>
-        <dd>For using adherence calculations function with large datasets.</dd>
+        <dd>Calculate adherence (batched processing)</dd>
       </dl><dl><dt>
 
-          <code><a href="adherenceSlidingWindowLoader.html">adherenceSlidingWindowLoader()</a></code>
+          <code><a href="calculateAdherenceSlidingWindowBatched.html">calculateAdherenceSlidingWindowBatched()</a></code>
 
         </dt>
-        <dd>For using adherence sliding window function with large datasets</dd>
+        <dd>Calculate adherence with sliding window approach (batched processing)</dd>
       </dl><dl><dt>
 
-          <code><a href="adherenceCalculations.html">adherenceCalculations()</a></code>
+          <code><a href="calculateAdherence.html">calculateAdherence()</a></code>
 
         </dt>
-        <dd>Calculating simple CMAs for the duration on observation period</dd>
+        <dd>Calculate medication adherence</dd>
       </dl><dl><dt>
 
-          <code><a href="adherenceSlidingWindow.html">adherenceSlidingWindow()</a></code>
+          <code><a href="calculateAdherenceSlidingWindow.html">calculateAdherenceSlidingWindow()</a></code>
 
         </dt>
-        <dd>AdhereR sliding window function wrapper for OMOP CDM</dd>
+        <dd>Calculate adherence using sliding window approach</dd>
       </dl></div><div class="section level2">
 
       <h3 id="add-features-to-data">Add features to data<a class="anchor" aria-label="anchor" href="#add-features-to-data"></a></h3>
@@ -112,13 +112,13 @@
           <code><a href="addCohorts.html">addCohorts()</a></code>
 
         </dt>
-        <dd>Add cohort membership indicators to CMA results</dd>
+        <dd>Adds cohort columns to cma data</dd>
       </dl><dl><dt>
 
           <code><a href="addBMI.html">addBMI()</a></code>
 
         </dt>
-        <dd>Add BMI category to CMA results</dd>
+        <dd>adds bmi values to CMA values</dd>
       </dl></div><div class="section level2">
 
       <h3 id="population-stats">Population stats<a class="anchor" aria-label="anchor" href="#population-stats"></a></h3>
@@ -132,10 +132,10 @@
 
       <dl><dt>
 
-          <code><a href="countPeople.html">countPeople()</a></code>
+          <code><a href="summarisePatientCounts.html">summarisePatientCounts()</a></code>
 
         </dt>
-        <dd>Generate summary counts of patients in adherence analysis</dd>
+        <dd>Summarise patient counts</dd>
       </dl></div><div class="section level2">
 
       <h3 id="mockdata-generation">Mockdata generation<a class="anchor" aria-label="anchor" href="#mockdata-generation"></a></h3>
@@ -149,10 +149,10 @@
 
       <dl><dt>
 
-          <code><a href="mockAdherenceFromOMOP.html">mockAdherenceFromOMOP()</a></code>
+          <code><a href="mockDrugExposure.html">mockDrugExposure()</a></code>
 
         </dt>
-        <dd>Create a mock OMOP CDM database for testing adherence calculations</dd>
+        <dd>Mock database for testing package</dd>
       </dl><dl><dt>
 
           <code><a href="cleanNARows.html">cleanNARows()</a></code>
@@ -177,7 +177,7 @@
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Johannes Holm, Greete Kelli Aava.</p>
+  <p>Developed by Greete Kelli Aava, Johannes Holm.</p>
 </div>
 
 <div class="pkgdown-footer-right">

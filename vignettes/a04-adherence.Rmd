@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+**Note:** Before running the code in this vignette, make sure you have installed and loaded all required packages. See the [Getting Started](a01-getting-started.html) vignette for installation instructions.
+
 Medication adherence can be quantified in several different ways depending on how days supply, gaps, and observation periods are interpreted.\
 The AdherenceFromOMOP package supports all nine variations of *Continuous Multiple-Interval Measures of Medication Availability/Gaps* (CMA1–CMA9) implemented in AdhereR.\
 This vignette provides short examples of how each CMA behaves using a small synthetic dataset.
@@ -17,8 +19,8 @@ For detailed documentation, see: <https://www.adherer.eu/adherence/>
 
 ```{r,echo = FALSE}
 sample_data <- data.frame(
-  person_id = c(1, 1, 1, 1, 1, 2, 2, 2, 3,4,4,4,4),
-  drug_concept_id = c(1, 1, 1, 1, 1, 1, 1, 1, 1,1,1,1,1),
+  person_id = c(1, 1, 1, 1, 1, 2, 2, 2, 3, 4, 4, 4, 4),
+  drug_concept_id = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
   drug_exposure_start_date = c(
     as.Date("2010-12-02"),
     as.Date("2011-05-31"),
@@ -53,7 +55,6 @@ sample_data <- dplyr::mutate(sample_data,
   followup_period_duration = as.integer(observation_period_end_date - observation_period_start_date),
   observation_window_start = cohort_start_date
 )
-
 ```
 
 ```{r, message=FALSE, results='hide',echo = FALSE}
@@ -94,12 +95,13 @@ Medication availability based on days supplied (excluding last event)
 -   Requires ≥2 events
 -   Computes: **sum(days_supply values except last) / (days between first and last event)**
 
-```{r,warning = FALSE, echo=FALSE, message = FALSE}
+```{r,warning = FALSE, echo=FALSE, message = FALSE, eval = FALSE}
 plot(cma_values$CMA1, show.legend = TRUE, align.all.patients = FALSE, align.first.event.at.zero = TRUE, period.in.days = 60)
 
 # 2:  (60+90) / 210
 # 1: (30+90+180) / 300
 ```
+![FIGURE 1 - Example of CMA1 graph, visualised with AdhereR](./figs/fig_cma1.png)
 
 ## CMA2
 
@@ -108,13 +110,14 @@ Medication availability including the last event, but using observation window e
 -   Events that start before observation window are not included
 -   Computes: **sum(all days_supply values) / (time from first event → observation window end)**
 
-```{r,warning = FALSE, message = FALSE, echo = FALSE}
+```{r,warning = FALSE, message = FALSE, echo = FALSE, eval = FALSE}
 plot(cma_values$CMA2, show.legend = FALSE, align.all.patients = FALSE, align.first.event.at.zero = TRUE, period.in.days = 60)
 
 # 90 / 306
 # 60 + 90 + 30 / 336
 # 30 + 90 + 180 + 180 / 336
 ```
+![FIGURE 2 - Example of CMA2 graph, visualised with AdhereR](./figs/fig_cma2.png)
 
 ## CMA 3 & 4
 
@@ -128,11 +131,11 @@ Proportion of gap days relative to time between first and last event. Equivalent
 
 -   Events that start before observation window are not included
 
--   Computes: **(number of days of theoretical use) / (days between first and last event)**
+-   Computes: **(number of days covered between first and last event) / (days between first and last event)**
 
     -   Theoretical use for sample patient number 1: 30 + 90 + 90. The start of the last event cuts off the length of the second from last event. In CMA1 the second from last event is included entirely.
 
-```{r,warning = FALSE, message=FALSE, echo = FALSE}
+```{r,warning = FALSE, message=FALSE, echo = FALSE, eval = FALSE}
 plot(cma_values$CMA5, show.legend = FALSE, align.all.patients = FALSE, align.first.event.at.zero = TRUE, period.in.days = 60)
 # (numberof daysof theoreticaluse)/(firsttolastevent)
 # comment from code: # Otherwise, the sum of durations of the events excluding the last divided by the number of days between the first and the last event
@@ -141,18 +144,19 @@ plot(cma_values$CMA5, show.legend = FALSE, align.all.patients = FALSE, align.fir
 # First:
 # 1 - (60) / 210 or 150 / 210
 # Second
-# 1 - (90) / 300 or 210 / 300 
+# 1 - (90) / 300 or 210 / 300
 ```
+![FIGURE 3 - Example of CMA5 graph, visualised with AdhereR](./figs/fig_cma5.png)
 
 ## CMA6
 
 Proportion of gap days relative to time between first and end of observation window. Equivalent to 1 – CMA2 but computed using theoretical use and accumulated gap time.
 
 -   Events that start before observation window are not included
--   Computes: **(number of days of theoretical use) / (days between first and last event)**
+-   Computes: **(number of days covered between first event and end of observation window) / (days between first event and observation window)**
     -   Theoretical use for sample patient number 1: 30 + 90 + 90 + 36.
 
-```{r,warning = FALSE, message = FALSE, echo = FALSE}
+```{r,warning = FALSE, message = FALSE, echo = FALSE, eval = FALSE}
 # # First:
 # 1 - (60 + 96) / 336
 # Second
@@ -160,36 +164,39 @@ Proportion of gap days relative to time between first and end of observation win
 # (numberof daysof theoreticaluse)/(firsteventtoendofobservationwindow)
 plot(cma_values$CMA6, show.legend = FALSE, align.all.patients = FALSE, align.first.event.at.zero = TRUE, period.in.days = 60)
 ```
+![FIGURE 4 - Example of CMA6 graph, visualised with AdhereR](./figs/fig_cma6.png)
 
 ## CMA7
 
 Gap-based measure using the full observation window start → end. No anchoring on first event. This measures adherence relative to the entire observation period.
 
 -   Includes events from before the observation period starts
--   Computes: **(number of days of theoretical use) / (number of days in observation window)**
+-   Computes: **(number of days covered in observation window) / (number of days in observation window)**
     -   Theoretical use for sample patient number 1: 25 + 30 + 90 + 90 + 36.
 
-```{r, warning = FALSE, message=FALSE, echo = FALSE}
+```{r, warning = FALSE, message=FALSE, echo = FALSE, eval = FALSE}
 # 1- (145+60+96) / 481
 # 1 - (120 + 90) / 481
 # (numberof daysof theoreticaluse)/(starttoendof observationwindow)
 plot(cma_values$CMA7, period.in.days = 60, show.legend = FALSE)
 ```
-
+![FIGURE 5 - Example of CMA7 graph, visualised with AdhereR](./figs/fig_cma7.png)
 ## CMA8
 
 Lagged version of CMA7. The observation window starts after a short “lag” from the event that starts before the observation window. Useful when excluding an initial adjustment period.
 
--   Computes: **(number of days of theoretical use) / (lagged start to end of observation window)**
+-   Computes: **(number of days covered between first event and end of observation window) / (lagged start to end of observation window)**
 
     -   Number of days accounting for lagged start for patient 1: 481 - 25.
+    -   Theoretical use for sample patient 1: 30 + 90 + 90 + 36.
 
-```{r,warning = FALSE, echo = FALSE, message=FALSE}
+```{r,warning = FALSE, echo = FALSE, message=FALSE, eval = FALSE}
 # (numberof daysof theoreticaluse)/(laggedstarttoendof observationwindow
 # 1- (145+60+96) / 481
 # 1 - (120 + 90) / (481-25) <- sisse tulev sündmus jääb välja
 plot(cma_values$CMA8, period.in.days = 60, show.legend = FALSE)
 ```
+![FIGURE 6 - Example of CMA8 graph, visualised with AdhereR](./figs/fig_cma8.png)
 
 ## CMA9
 
@@ -211,7 +218,7 @@ Weighted daily adherence measure. This method evaluates, for every day, how much
 
     -   Patient 1: ((1 - 120/180)145 + (1 - 0/30)30 + (1 - 90/180)180 + (1 - 0/90) 90 + (1 - 162/432) \* 36) / 481
 
-```{r, warning = FALSE, message = FALSE, echo = FALSE}
+```{r, warning = FALSE, message = FALSE, echo = FALSE, eval = FALSE}
 # number of days in the observation window, each weighted by the ratio
 # of days supply applicable to their event interval)
 #   /
@@ -223,3 +230,4 @@ Weighted daily adherence measure. This method evaluates, for every day, how much
 # ((1 - 120/180)*145 + (1 - 0/30)*30 + (1 - 90/180)*180 + (1 - 0/90) * 90 + (1 - 162/432) * 36) / 481
 plot(cma_values$CMA9, period.in.days = 60, show.legend = FALSE)
 ```
+![FIGURE 7 - Example of CMA9 graph, visualised with AdhereR](./figs/fig_cma9.png)

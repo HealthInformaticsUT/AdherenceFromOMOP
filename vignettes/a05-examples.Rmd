@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+**Note:** Before running the code in this vignette, make sure you have installed and loaded all required packages. See the [Getting Started](a01-getting-started.html) vignette for installation instructions.
+
 # Example use cases with statins
 
 ## Database connection
@@ -40,20 +42,22 @@ statiinid <- c("Atorvastatin", "Rosuvastatin", "Simvastatin", "Pravastatin", "Fl
 ## Adherence for each statin group
 
 ```{r, eval=FALSE}
-medicationGroups <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm,
-                                                      name = statiinid,
-                                                      nameStyle = "{concept_code}")
+medicationGroups <- CodelistGenerator::getDrugIngredientCodes(
+  cdm = cdm,
+  name = statiinid,
+  nameStyle = "{concept_name}"
+)
 
 ingredientNames <- names(medicationGroups)
 concepts <- unlist(medicationGroups, use.names = F)
 ```
 
 ```{r, eval=FALSE}
-# generate chronic drug exposure uses codelist generator for finding suitable drugs by default ingredients (provided by drugConceptList) are included 1 out of inf.
+# generate chronic drug exposure uses conceptSet for finding suitable drugs
 
 all_statins <- generateChronicDrugExposure(
   cdm = cdm,
-  drugConceptIdList = concepts,
+  conceptSet = medicationGroups,
   name = "statins_study",
   overwrite = T
 )
@@ -65,11 +69,11 @@ all_statins <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchem
 To calculate adherence for each medication group the groups must be defined first:
 
 ```{r, eval=FALSE}
-adherenceCMA5 <- adherenceCalculationsLoader(
-  reference = all_statins,
+adherenceCMA5 <- calculateAdherenceBatched(
+  drugExposure = all_statins,
   cdm = cdm,
   medicationGroup = medicationGroups,
-  resultsTableName = "statins_cma5",
+  name = "statins_cma5",
   cma = "CMA5"
 )
 
@@ -79,16 +83,19 @@ adherenceCMA5 <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSch
 
 ## Adherence for each statin group using cohorts
 
-For selecting people from specific cohorts cohort id and cohort schema values must be used.
+For selecting people from specific cohorts, use a cohort table reference and cohort id values.
 
 ```{r, eval=FALSE}
+# Get reference to cohort table
+cohort_ref <- dplyr::tbl(db, CDMConnector::inSchema("ohdsi_results_202503", "cohort", CDMConnector::dbms(db)))
+
 all_statins_cohort <- generateChronicDrugExposure(
   cdm = cdm,
-  drugConceptList = statiinid,
+  conceptSet = medicationGroups,
   name = "statins_study_1688",
   overwrite = T,
   cohortId = 1688,
-  cohortSchema = "ohdsi_results_202503"
+  cohort = cohort_ref
 )
 
 # if the table already exists in database
@@ -114,29 +121,30 @@ names(medicationGroups)
 ```
 
 ```{r, eval=FALSE}
-adherenceCMA5 <- adherenceCalculationsLoader(
-  reference = all_statins_cohort,
+adherenceCMA5 <- calculateAdherenceBatched(
+  drugExposure = all_statins_cohort,
   cdm = cdm,
   medicationGroup = medicationGroups,
-  resultsTableName = "statins_study_1688_medgroups",
+  name = "statins_study_1688_medgroups",
   cma = "CMA5"
 )
 ```
 
 ```{r, eval=FALSE}
-adherenceCMA5SW <- adherenceSlidingWindowLoader(
-  reference = all_statins_cohort,
+adherenceCMA5SW <- calculateAdherenceSlidingWindowBatched(
+  drugExposure = all_statins_cohort,
   cdm = cdm,
   medicationGroup = medicationGroups,
-  resultsTableName = "statins_study_1688_medgroups_sw",
+  name = "statins_study_1688_medgroups_sw",
   cma = "CMA5",
-  sliding.window.start = 0,
-  sliding.window.start.unit = c("days", "weeks", "months", "years")[1],
+  # the following sets sliding window with duration of 3 years and step length of 3 years:
   sliding.window.duration = 3,
   sliding.window.duration.unit = c("days", "weeks", "months", "years")[4],
   sliding.window.step.duration = 3,
-  sliding.window.step.unit = c("days", "weeks", "months", "years")[4],
+  sliding.window.step.unit = c("days", "weeks", "months", "years")[4]
 )
+
+adherenceCMA5SW <- dplyr::tbl(db, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = "statins_study_1688_medgroups_sw", CDMConnector::dbms(db)))
 ```
 
 ## Add cohorts and data
@@ -155,7 +163,7 @@ cma_values_with_cohort_features <- addCohorts(adherenceCMA5, cohortTable)
 Adding body mass index is a separate function.
 
 ```{r, eval=FALSE}
-cma_data_with_bmi <- addBMI(adherenceCMA5, cdm)
+cma_data_with_bmi <- addBMI(adherenceCMA5SW, cdm)
 ```
 
 To get an overview this function reports the number of individuals in three groups: (1) individuals included in the cohort,
@@ -165,8 +173,9 @@ To get an overview this function reports the number of individuals in three grou
 (3) individuals who have at least *n* drug exposure records within a given calendar year, calculated from the generated drug exposure table.
 
 ```{r, eval = FALSE}
-stats <- countPeople(cdm = cdm,
-                        cmaTable = adherenceCMA5,
-                        generatedTable = all_statins)
-
+stats <- summarisePatientCounts(
+  cdm = cdm,
+  adherenceData = adherenceCMA5SW,
+  drugExposure = all_statins_cohort
+)
 ```

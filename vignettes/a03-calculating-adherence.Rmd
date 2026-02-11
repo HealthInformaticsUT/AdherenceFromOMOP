@@ -7,13 +7,15 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+**Note:** Before running the code in this vignette, make sure you have installed and loaded all required packages. See the [Getting Started](a01-getting-started.html) vignette for installation instructions.
+
 ## Overview
 
-Medication adherence calculations depend on the **CMA** (Continuous Medication Availability) measure selected. **AdherenceFromOMOP** supports CMA types **1–9**. For examples illustrating the behavior of different CMA types, see the [Intro to CMA](#0){style="font-size: 11pt;"} tutorial. In this package adherenceSlidingWindow and adherenceCalculations are wrappers for functions in [AdhereR](#0 "link to package"){style="font-size: 11pt;"} package.
+Medication adherence calculations depend on the **CMA** (Continuous Medication Availability) measure selected. **AdherenceFromOMOP** supports CMA types **1–9**. For examples illustrating the behavior of different CMA types, see the [Intro to CMA](a04-adherence.html) tutorial. This package provides wrappers for functions in [AdhereR](https://www.adherer.eu/) package to calculate adherence on OMOP CDM.
 
 For more detailed guidance, refer to the [AdhereR documentation](https://cran.r-project.org/web/packages/AdhereR/AdhereR.pdf "link to cran").
 
-For large datasets, it is recommended to use `adherenceSlidingWindowLoader` and `adherenceCalculationsLoader`, which load data in chunks and write results directly to the database.
+For large datasets, it is recommended to use `calculateAdherenceSlidingWindowBatched` and `calculateAdherenceBatched`, which load data in chunks and write results directly to the database.
 
 In [AdhereR](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0174426) software the follow-up window is the total period for which relevant medication events are recorded for patients, while the observation window is the period within the follow-up window over which adherence is actually computed.
 
@@ -39,7 +41,7 @@ Below is an example of manually creating medication groups:
 ```{r, eval = FALSE}
 medicationGroup <- list(
   c(1361364),
-  c(1830280)   # vectors of drug_concept_ids
+  c(1830280) # vectors of drug_concept_ids
 )
 groupNames <- c("group1", "group2")
 
@@ -54,7 +56,7 @@ medicationGroup <- omopgenerics::newCodelist(medicationGroup)
 This is used for calculating adherence throughout subjects observation period.
 
 ```{r, eval=FALSE, include=FALSE, message=FALSE}
-cdm <- mockAdherenceFromOMOP()
+cdm <- mockDrugExposure()
 
 chronicDrugExposure <- generateChronicDrugExposure(
   cdm = cdm,
@@ -64,28 +66,29 @@ chronicDrugExposure <- generateChronicDrugExposure(
 ```
 
 ```{r, eval=FALSE, include = TRUE, message = FALSE}
-results <- adherenceCalculationsLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_demo_cma5", cma = c("CMA5"), medicationGroup = medicationGroup)
+results <- calculateAdherenceBatched(drugExposure = chronicDrugExposure, cdm = cdm, name = "AdherenceFromOMOP_demo_cma5", cma = c("CMA5"), medicationGroup = medicationGroup)
 results
 ```
 
 ## Medication adherence with sliding window
 
-This approach computes adherence over a series of sliding windows within the observation period, allowing adherence to be examined over time. Unlike the AdhereR function output, window.ID values are not unique across all records for a given patient. They are assigned sequentially within each contiguous period without NA values and reset after gaps.
+This approach computes adherence over a series of sliding windows within the observation period, allowing adherence to be examined over time. Unlike the AdhereR function output, window.ID values are not unique across all records for a given patient. They are assigned sequentially within each continuous period without NA values and reset after gaps.
 
 ```{r, eval = FALSE, message = FALSE}
-results <- adherenceSlidingWindowLoader(chronicDrugExposure, cdm, resultsTableName = "AdherenceFromOMOP_demo_sw", cma = c("CMA5"), delayObservationWindowStart = FALSE, medicationGroup = medicationGroup)
+results <- calculateAdherenceSlidingWindowBatched(drugExposure = chronicDrugExposure, cdm = cdm, name = "AdherenceFromOMOP_demo_sw", cma = c("CMA5"), delayObservationWindowStart = FALSE, medicationGroup = medicationGroup)
 results
 ```
 
 Setting `delayObservationWindowStart = TRUE` delays the start of observation period used for adherence calculations, in this case the sliding-window sequence until the first prescription is dispensed.
 
 ```{r, eval = FALSE}
-results_delayed <- adherenceSlidingWindowLoader(
-  chronicDrugExposure,
-  cdm,
-  resultsTableName = "AdherenceFromOMOP_demo_sw_delayed",
+results_delayed <- calculateAdherenceSlidingWindowBatched(
+  drugExposure = chronicDrugExposure,
+  cdm = cdm,
+  name = "AdherenceFromOMOP_demo_sw_delayed",
   cma = c("CMA5"),
   delayObservationWindowStart = TRUE,
+  # the following sets sliding window with duration of 1 year and step length of 1 year:
   sliding.window.duration = 1,
   sliding.window.duration.unit = c("days", "weeks", "months", "years")[4],
   sliding.window.step.duration = 1,

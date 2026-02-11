@@ -1,66 +1,67 @@
-#' For using adherence sliding window function with large datasets
+#' Calculate adherence with sliding window approach (batched processing)
 #'
-#' Calculates adherence in batches
+#' Calculates adherence in batches for large datasets using a sliding window approach.
 #'
-#' @param reference reference to table
-#' @param cdm a cdm_reference object
-#' @param ... input values for CMA_sliding_window
-#' @param batchSize default 1000.
-#' @param medicationGroup CMA is calculated for each defined group. Medication group is a named list with a name and drug_concept_id values. For creating this list it is highly recommended to use CodelistGenerator \link[CodelistGenerator]{"https://darwin-eu.github.io/CodelistGenerator/articles/a04_GenerateVocabularyBasedCodelist.html"}
-#' @param cma By default the function calculates adherence with all different CMA algorithms (CMA1-CMA9).
-#' @param resultsTableName name of the table where results are stores
+#' @inheritParams drugExposureDoc
+#' @inheritParams cdmDoc
+#' @inheritParams cmaDoc
+#' @inheritParams medicationGroupDoc
+#' @inheritParams batchSizeDoc
+#' @inheritParams nameDoc
+#' @param ... Additional arguments passed to AdhereR CMA_sliding_window functions.
+#'
+#' @return Database table reference containing adherence calculations with sliding windows.
 #'
 #' @export
-adherenceSlidingWindowLoader <- function(reference,
-                                         cdm,
-                                         resultsTableName = "adherenceFromOMOP_results",
-                                         cma = c(
-                                           "CMA1",
-                                           "CMA2",
-                                           "CMA3",
-                                           "CMA4",
-                                           "CMA5",
-                                           "CMA6",
-                                           "CMA7",
-                                           "CMA8",
-                                           "CMA9"
-                                         ),
-                                         medicationGroup = NULL,
-                                         batchSize = 10000,
-                                         ...) {
-  if (is.null(reference)) {
-    cli::cli_alert_warning("Provided reference is faulty")
+calculateAdherenceSlidingWindowBatched <- function(drugExposure,
+                                                   cdm,
+                                                   name = "adherenceFromOMOP_results",
+                                                   cma = c(
+                                                     "CMA1",
+                                                     "CMA2",
+                                                     "CMA3",
+                                                     "CMA4",
+                                                     "CMA5",
+                                                     "CMA6",
+                                                     "CMA7",
+                                                     "CMA8",
+                                                     "CMA9"
+                                                   ),
+                                                   medicationGroup = NULL,
+                                                   batchSize = 10000,
+                                                   ...) {
+  if (is.null(drugExposure)) {
+    cli::cli_alert_warning("Provided drug exposure data is missing or faulty")
     return(NULL)
   }
 
-  uniqueSubjectIds <- reference %>%
+  uniqueSubjectIds <- drugExposure %>%
     dplyr::distinct(person_id) %>%
     dplyr::pull(person_id)
 
   batches <- split(uniqueSubjectIds, ceiling(seq_along(uniqueSubjectIds) / batchSize))
 
   writeSchema <- CDMConnector::cdmWriteSchema(cdm)
-  nameWithPrefix <- paste0(writeSchema[[2]], resultsTableName)
+  nameWithPrefix <- paste0(writeSchema[[2]], name)
   connection <- CDMConnector::cdmCon(cdm)
 
-  if (nameWithPrefix %in% DBI::dbListTables(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix))){
+  if (nameWithPrefix %in% DBI::dbListTables(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix))) {
     cli::cli_alert_info(paste("Table", nameWithPrefix, "already exists!"))
-    return( NULL )
+    return(NULL)
   }
 
   for (i in seq_along(batches)) {
     cli::cli_alert_info(paste("Working with batch", names(batches)[i], "out of", length(batches)))
 
     batch <- batches[[i]]
-    data <- reference %>%
+    batchData <- drugExposure %>%
       dplyr::filter(person_id %in% batch) %>%
       dplyr::collect()
 
-    result <- adherenceSlidingWindow(
+    result <- calculateAdherenceSlidingWindow(
+      drugExposure = batchData,
       cdm = NULL,
-      data = data,
       cma = cma,
-      name = NULL,
       medicationGroup = medicationGroup,
       ...
     )
@@ -72,68 +73,71 @@ adherenceSlidingWindowLoader <- function(reference,
     DBI::dbWriteTable(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix), value = result, append = TRUE)
   }
 
-  newTable <- tryCatch({
-     dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = resultsTableName, CDMConnector::dbms(connection)))
-  }, error = function(e) {
-    newTable <- NULL
-    cli::cli_alert_danger("{i} failed: {e$message}. Returning null.")
-    NULL
-  })
+  newTable <- tryCatch(
+    {
+      dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = name, CDMConnector::dbms(connection)))
+    },
+    error = function(e) {
+      cli::cli_alert_danger("Failed to retrieve results table: {e$message}. Returning NULL.")
+      NULL
+    }
+  )
 
   return(newTable)
 }
 
-#' AdhereR sliding window function wrapper for OMOP CDM
+#' Calculate adherence using sliding window approach
 #'
-#' @param cdm a cdm_reference object with 'name' table
-#' @param name name of the table used for adherence calculations, generated with generateChronicDrugExposure()
-#' @param ... input values for CMA_sliding_window
-#' @param cma By default the function calculates adherence with all different CMA algorithms (CMA1-CMA9).
-#' @param data Can be used with in-memory data.
-#' @param medicationGroup CMA is calculated for each defined group. Medication group is a named list with a name and drug_concept_id values. For creating this list it is highly recommended to use CodelistGenerator \link[CodelistGenerator]{"https://darwin-eu.github.io/CodelistGenerator/articles/a04_GenerateVocabularyBasedCodelist.html"}
-#' @param delayObservationWindowStart delays adherence calculation window until first medication purchase
-#' @param cleanRows If TRUE, rows with NA CMA values are dropped and window.ID is reset to be sequential within each contiguous non-NA CMA interval.
+#' Calculates CMA (Continuous Medication Availability) metrics using a sliding window
+#' approach to examine adherence over time within the observation period.
 #'
-#' @return vector with CMA_sliding_windows results
+#' @inheritParams drugExposureDoc
+#' @inheritParams cdmDoc
+#' @inheritParams cmaDoc
+#' @inheritParams medicationGroupDoc
+#' @param delayObservationWindowStart (`logical(1)`) Should the observation window start
+#'   be delayed until the first prescription? Default: `FALSE`.
+#' @param cleanRows (`logical(1)`) If TRUE, rows with NA CMA values are dropped and
+#'   window.ID is reset to be sequential within each contiguous non-NA CMA interval.
+#'   Default: `TRUE`.
+#' @param ... Additional arguments passed to AdhereR CMA_sliding_window functions.
+#'
+#' @return Data frame with adherence calculations for each sliding window period.
+#'   Includes window.id, window.start, window.end, and CMA values.
+#'
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' connection <- DBI::dbConnect(duckdb::duckdb(dbdir = CDMConnector::eunomiaDir()))
+#' cdm <- mockDrugExposure()
+#' conceptSet <- CodelistGenerator::getDrugIngredientCodes(cdm, name = "Atorvastatin")
 #'
-#' cdm <- CDMConnector::cdmFromCon(
-#'   con = connection,
-#'   cdmSchema = "main",
-#'   writeSchema = "main",
-#'   cdmName = "my_duckdb_database"
-#' )
-#'
-#' cdm <- generateChronicDrugExposure(
+#' drugExposure <- generateChronicDrugExposure(
 #'   cdm = cdm,
-#'   ingredients = c("acetaminophen", "metformin", "simvastatin"),
-#'   name = "test_table",
-#'   overwrite = TRUE
+#'   conceptSet = conceptSet,
+#'   name = "drug_exposure"
 #' )
-#' adherenceSlidingWindow(cdm, name = "test_table", cma = c("CMA1", "CMA2", "CMA3", "CMA4"))
+#'
+#' adherenceData <- drugExposure |>
+#'   calculateAdherenceSlidingWindow(cdm, cma = c("CMA5", "CMA7"))
 #' }
-adherenceSlidingWindow <- function(cdm = NULL,
-                                   data = NULL,
-                                   cma = c(
-                                     "CMA1",
-                                     "CMA2",
-                                     "CMA3",
-                                     "CMA4",
-                                     "CMA5",
-                                     "CMA6",
-                                     "CMA7",
-                                     "CMA8",
-                                     "CMA9"
-                                   ),
-                                   name = NULL,
-                                   medicationGroup = NULL,
-                                   delayObservationWindowStart = FALSE,
-                                   cleanRows = TRUE,
-                                   ...) {
+calculateAdherenceSlidingWindow <- function(drugExposure,
+                                            cdm = NULL,
+                                            cma = c(
+                                              "CMA1",
+                                              "CMA2",
+                                              "CMA3",
+                                              "CMA4",
+                                              "CMA5",
+                                              "CMA6",
+                                              "CMA7",
+                                              "CMA8",
+                                              "CMA9"
+                                            ),
+                                            medicationGroup = NULL,
+                                            delayObservationWindowStart = FALSE,
+                                            cleanRows = TRUE,
+                                            ...) {
   if (!all(cma %in% c(
     "CMA1",
     "CMA2",
@@ -149,7 +153,7 @@ adherenceSlidingWindow <- function(cdm = NULL,
     return(NULL)
   }
 
-  df <- loadData(cdm, name, data, delayObservationWindowStart)
+  df <- loadData(cdm = cdm, name = NULL, data = drugExposure, delayObservationWindowStart = delayObservationWindowStart)
 
   if (is.null(df)) {
     return(NULL)
@@ -204,7 +208,7 @@ adherenceSlidingWindow <- function(cdm = NULL,
     }
   }
 
-  if (length(computedCMAs)>0){
+  if (length(computedCMAs) > 0) {
     cma_values <- dplyr::bind_rows(computedCMAs, .id = "name")
 
     if (cleanRows) {
@@ -219,74 +223,86 @@ adherenceSlidingWindow <- function(cdm = NULL,
   return(result)
 }
 
-#' For using adherence calculations function with large datasets.
+#' Calculate adherence (batched processing)
 #'
-#' Calculates adherence in batches
+#' Calculates adherence in batches for large datasets.
 #'
-#' @param reference reference to table
-#' @param cdm a cdm_reference object with 'name' table
-#' @param ... input values for adherenceCalculations
-#' @param batchSize default 1000.
-#' @param cma By default the function calculates adherence with all different CMA algorithms (CMA1-CMA9).
-#' @param resultsTableName name of the table where results are stores
+#' @inheritParams drugExposureDoc
+#' @inheritParams cdmDoc
+#' @inheritParams cmaDoc
+#' @inheritParams medicationGroupDoc
+#' @inheritParams batchSizeDoc
+#' @inheritParams nameDoc
+#' @param ... Additional arguments passed to AdhereR CMA functions.
+#'
+#' @return Database table reference containing adherence calculations.
 #'
 #' @export
 #' @examples
 #' \dontrun{
-#' cdm <- mockAdherenceFromOMOP()
+#' cdm <- mockDrugExposure()
+#' conceptSet <- CodelistGenerator::getDrugIngredientCodes(cdm, name = "Atorvastatin")
 #'
-#' chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
+#' drugExposure <- generateChronicDrugExposure(
+#'   cdm = cdm,
+#'   conceptSet = conceptSet,
+#'   name = "drug_exposure"
+#' )
 #'
-#' CMA_values <- adherenceCalculationsLoader(reference = chronicDrugExposure, cdm = cdm, cma = "CMA5")
+#' adherenceData <- drugExposure |>
+#'   calculateAdherenceBatched(cdm, cma = "CMA5", name = "adherence_results")
 #' }
 #'
-adherenceCalculationsLoader <- function(reference,
-                                        cdm,
-                                        resultsTableName = "adherenceFromOMOP_results",
-                                        cma = c(
-                                          "CMA1",
-                                          "CMA2",
-                                          "CMA3",
-                                          "CMA4",
-                                          "CMA5",
-                                          "CMA6",
-                                          "CMA7",
-                                          "CMA8",
-                                          "CMA9"
-                                        ),
-                                        batchSize = 1000,
-                                        ...) {
-  if (is.null(reference)) {
-    cli::cli_alert_warning("Provided reference is faulty")
+calculateAdherenceBatched <- function(drugExposure,
+                                      cdm,
+                                      name = "adherenceFromOMOP_results",
+                                      cma = c(
+                                        "CMA1",
+                                        "CMA2",
+                                        "CMA3",
+                                        "CMA4",
+                                        "CMA5",
+                                        "CMA6",
+                                        "CMA7",
+                                        "CMA8",
+                                        "CMA9"
+                                      ),
+                                      medicationGroup = NULL,
+                                      batchSize = 1000,
+                                      ...) {
+  if (is.null(drugExposure)) {
+    cli::cli_alert_warning("Provided drug exposure data is missing or faulty")
     return(NULL)
   }
-  uniqueSubjectIds <- reference %>%
+
+  uniqueSubjectIds <- drugExposure %>%
     dplyr::distinct(person_id) %>%
     dplyr::pull(person_id)
 
   batches <- split(uniqueSubjectIds, ceiling(seq_along(uniqueSubjectIds) / batchSize))
 
   writeSchema <- CDMConnector::cdmWriteSchema(cdm)
-  nameWithPrefix <- paste0(writeSchema[[2]], resultsTableName)
+  nameWithPrefix <- paste0(writeSchema[[2]], name)
   connection <- CDMConnector::cdmCon(cdm)
 
-  if (nameWithPrefix %in% DBI::dbListTables(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix))){
+  if (nameWithPrefix %in% DBI::dbListTables(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix))) {
     cli::cli_alert_info(paste("Table", nameWithPrefix, "already exists!"))
-    return( NULL )
+    return(NULL)
   }
 
   for (i in seq_along(batches)) {
     cli::cli_alert_info(paste("Working with batch", names(batches)[i], "out of", length(batches)))
 
     batch <- batches[[i]]
-    data <- reference %>%
+    batchData <- drugExposure %>%
       dplyr::filter(person_id %in% batch) %>%
       dplyr::collect()
 
-    result <- adherenceCalculations(
+    result <- calculateAdherence(
+      drugExposure = batchData,
       cdm = NULL,
-      data = data,
       cma = cma,
+      medicationGroup = medicationGroup,
       ...
     )
 
@@ -301,68 +317,61 @@ adherenceCalculationsLoader <- function(reference,
     return(NULL)
   }
 
-  newTable <- dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = resultsTableName, CDMConnector::dbms(connection)))
+  newTable <- dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = name, CDMConnector::dbms(connection)))
 
   return(newTable)
 }
 
-#' Calculating simple CMAs for the duration on observation period
+#' Calculate medication adherence
 #'
-#' @param cdm a cdm_reference object with 'name' table
-#' @param name name of the table used for adherence calculations
-#' @param ... input values for adhereR CMA function call
-#' @param cma By default the function calculates adherence with all different CMA algorithms (CMA1-CMA9).
-#' @param data instead of cdm provide in-memory data.
-#' @param medicationGroup CMA is calculated for each defined group. Medication group is a named list with a name and drug_concept_id values. For creating this list it is highly recommended to use CodelistGenerator \link[CodelistGenerator]{"https://darwin-eu.github.io/CodelistGenerator/articles/a04_GenerateVocabularyBasedCodelist.html"}
-#' @param delayObservationWindowStart delays adherence calculation window until first medication purchase
-#' @param cleanRows If TRUE, rows with NA CMA values are dropped and window.ID is reset to be sequential within each contiguous non-NA CMA interval.
+#' Calculates CMA (Continuous Medication Availability) metrics for the duration
+#' of the observation period.
 #'
+#' @inheritParams drugExposureDoc
+#' @inheritParams cdmDoc
+#' @inheritParams cmaDoc
+#' @inheritParams medicationGroupDoc
+#' @param delayObservationWindowStart (`logical(1)`) Should the observation window start
+#'   be delayed until the first prescription? Default: `FALSE`.
+#' @param cleanRows (`logical(1)`) If TRUE, rows with NA CMA values are dropped.
+#'   Default: `TRUE`.
+#' @param ... Additional arguments passed to AdhereR CMA functions.
 #'
-#' @returns table with CMA results
+#' @returns Data frame with adherence calculations per person and medication group.
+#'
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' connection <- DBI::dbConnect(duckdb::duckdb(dbdir = CDMConnector::eunomiaDir()))
+#' cdm <- mockDrugExposure()
+#' conceptSet <- CodelistGenerator::getDrugIngredientCodes(cdm, name = "Atorvastatin")
 #'
-#' cdm <- CDMConnector::cdmFromCon(
-#'   con = connection,
-#'   cdmSchema = "main",
-#'   writeSchema = "main",
-#'   cdmName = "my_duckdb_database"
+#' drugExposure <- generateChronicDrugExposure(
+#'   cdm = cdm,
+#'   conceptSet = conceptSet,
+#'   name = "drug_exposure"
 #' )
 #'
-#' cdm <- generateChronicDrugExposure(
-#'   cdm = cdm,
-#'   ingredients = c("acetaminophen", "metformin", "simvastatin"),
-#'   name = "test_table",
-#'   overwrite = TRUE
-#' )
-#' adherenceCalculations(
-#'   cdm = cdm,
-#'   ingredient = c("acetaminophen"),
-#'   name = "test_table",
-#'   cma = "CMA1"
-#' )
+#' adherenceData <- drugExposure |>
+#'   calculateAdherence(cdm, cma = c("CMA5", "CMA7"))
 #' }
-adherenceCalculations <- function(cdm = NULL,
-                                  data = NULL,
-                                  cma = c(
-                                    "CMA1",
-                                    "CMA2",
-                                    "CMA3",
-                                    "CMA4",
-                                    "CMA5",
-                                    "CMA6",
-                                    "CMA7",
-                                    "CMA8",
-                                    "CMA9"
-                                  ),
-                                  name = NULL,
-                                  medicationGroup = NULL,
-                                  delayObservationWindowStart = FALSE,
-                                  cleanRows = TRUE,
-                                  ...) {
+calculateAdherence <- function(drugExposure,
+                               cdm = NULL,
+                               cma = c(
+                                 "CMA1",
+                                 "CMA2",
+                                 "CMA3",
+                                 "CMA4",
+                                 "CMA5",
+                                 "CMA6",
+                                 "CMA7",
+                                 "CMA8",
+                                 "CMA9"
+                               ),
+                               medicationGroup = NULL,
+                               delayObservationWindowStart = FALSE,
+                               cleanRows = TRUE,
+                               ...) {
   if (!all(cma %in% c(
     "CMA1",
     "CMA2",
@@ -378,7 +387,7 @@ adherenceCalculations <- function(cdm = NULL,
     return(NULL)
   }
 
-  df <- loadData(cdm, name, data, delayObservationWindowStart)
+  df <- loadData(cdm = cdm, name = NULL, data = drugExposure, delayObservationWindowStart = delayObservationWindowStart)
   if (is.null(df)) {
     return(NULL)
   }
@@ -431,7 +440,7 @@ adherenceCalculations <- function(cdm = NULL,
 
   cma_values <- dplyr::bind_rows(computedCMAs, .id = "name")
 
-  if (cleanRows){
+  if (cleanRows) {
     cma_values <- cleanNARows(cma_values)
   }
   result <- addPatientInformation(data = df, cma_values = cma_values)
@@ -447,13 +456,10 @@ adherenceCalculations <- function(cdm = NULL,
 #'   typically output from generateChronicDrugExposure.
 #' @param cma_values Data frame containing CMA calculation results from AdhereR functions.
 #'
-#' @returns Data frame combining CMA results with patient information. For sliding window
-#'   results, each window row is matched with patient info from drug exposures within
-#'   that window. The days_to_death column will be NA for windows without drug exposures.
+#' @returns Data frame combining CMA results with patient information.
 #'
 #' @keywords internal
 addPatientInformation <- function(data, cma_values) {
-
   data <- data %>%
     dplyr::select(-days_supply, -drug_concept_id, -drug_exposure_start_date)
 
@@ -527,7 +533,7 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
 
   if (all(c("cohort_start_date", "cohort_end_date") %in% colnames(df))) {
     # cohort period as followup period
-    if (delayObservationWindowStart){
+    if (delayObservationWindowStart) {
       df <- df %>%
         dplyr::group_by(person_id) %>%
         dplyr::mutate(
@@ -540,8 +546,7 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
           )
         )
       cli::cli_alert_info("Observation window start is delayed.")
-
-    } else{
+    } else {
       # default
       df <- df %>%
         dplyr::mutate(
@@ -555,7 +560,7 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
         )
     }
   } else {
-    if (delayObservationWindowStart){
+    if (delayObservationWindowStart) {
       df <- df %>%
         dplyr::group_by(person_id) %>%
         dplyr::mutate(
@@ -570,7 +575,6 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
           )
         )
       cli::cli_alert_info("Observation window start is delayed.")
-
     } else {
       df <- df %>%
         dplyr::mutate(
@@ -605,20 +609,20 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
 #'   grouped by name, person_id, and group.
 #'
 #' @keywords internal
-cleanNARows <- function(data){
-  if ("window.ID" %in% colnames(data)){
-  # rows with NA CMA values are dropped and window.ID reset after NA rows
-  cleanedCMAData <- data %>%
-    dplyr::group_by(name, person_id, group) %>%
-    dplyr::mutate(
-      nonNASeries = cumsum(is.na(CMA) | dplyr::lag(is.na(CMA), default = TRUE))
-    ) %>%
-    dplyr::filter(!is.na(CMA)) %>%
-    dplyr::ungroup() %>%
-    dplyr::group_by(name, person_id, group, nonNASeries) %>%
-    dplyr::mutate(window.ID = 1:dplyr::n()) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(!nonNASeries)
+cleanNARows <- function(data) {
+  if ("window.ID" %in% colnames(data)) {
+    # rows with NA CMA values are dropped and window.ID reset after NA rows
+    cleanedCMAData <- data %>%
+      dplyr::group_by(name, person_id, group) %>%
+      dplyr::mutate(
+        nonNASeries = cumsum(is.na(CMA) | dplyr::lag(is.na(CMA), default = TRUE))
+      ) %>%
+      dplyr::filter(!is.na(CMA)) %>%
+      dplyr::ungroup() %>%
+      dplyr::group_by(name, person_id, group, nonNASeries) %>%
+      dplyr::mutate(window.ID = 1:dplyr::n()) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(!nonNASeries)
   } else {
     cleanedCMAData <- data %>%
       dplyr::filter(!is.na(CMA))

@@ -13,9 +13,7 @@ typically output from generateChronicDrugExposure.}
 \item{cma_values}{Data frame containing CMA calculation results from AdhereR functions.}
 }
 \value{
-Data frame combining CMA results with patient information. For sliding window
-  results, each window row is matched with patient info from drug exposures within
-  that window. The days_to_death column will be NA for windows without drug exposures.
+Data frame combining CMA results with patient information.
 }
 \description{
 Enriches CMA calculation results with patient demographic and observation period data.
