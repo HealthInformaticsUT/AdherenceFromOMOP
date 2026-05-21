@@ -29,7 +29,8 @@ Imports:
     data.table,
     DBI,
     tidyr,
-    lubridate
+    lubridate,
+    CodelistGenerator
 Suggests:
     duckdb,
     knitr,

@@ -631,3 +631,51 @@ cleanNARows <- function(data) {
 
   return(cleanedCMAData)
 }
+
+#' Function for grouping medications
+#'
+#' Uses CodelistGenerator to get drug ingredient codes
+#'
+#' @inheritParams cdmDoc
+#' @param ingredientGroups previously determined grouping, format as list(name = c(ingredient, ingredient)). Ingredient can be marked as concept ID or ingredient name.
+#'
+#' @returns codelist generator output with the structure of ingredientGroups
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#'
+#' mock_cdm <- mockDrugExposure()
+#' groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c(21216049, 35741956), group2 = c(37498042, 42899580)))
+#'
+#' }
+medicationGrouping <- function(cdm, ingredientGroups = NULL){
+
+  if (is.null(ingredientGroups)){
+    cli::cli_alert_info("Medication groups not provided")
+    return(NULL)
+  }
+
+  allIngredients <- unlist(ingredientGroups, use.names=FALSE)
+  ingredientsAreNumeric <- all(grepl("^\\d+$", as.character(allIngredients)))
+  ingredientCodelist  <- CodelistGenerator::getDrugIngredientCodes(
+    cdm = cdm,
+    name = allIngredients,
+    nameStyle = if (ingredientsAreNumeric) "{concept_id}" else "{concept_name}"
+  )
+  groupedCodelist <- list()
+  for (groupName in names(ingredientGroups)) {
+    ingredientsInGroup <- stringr::str_to_lower(ingredientGroups[[groupName]])
+
+    # Find all codelist entries that match ingredients in this group
+    matchingKeys <- names(ingredientCodelist)[names(ingredientCodelist) %in% ingredientsInGroup]
+
+    # Combine and deduplicate concept IDs across matched ingredients
+    groupedCodelist[[groupName]] <- unique(unlist(ingredientCodelist[matchingKeys], use.names = FALSE))
+  }
+
+  groupedCodelist <- omopgenerics::newCodelist(groupedCodelist)
+
+  return( groupedCodelist )
+}
+

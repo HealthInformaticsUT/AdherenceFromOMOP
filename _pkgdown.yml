@@ -20,6 +20,7 @@ reference:
   - calculateAdherenceSlidingWindowBatched
   - calculateAdherence
   - calculateAdherenceSlidingWindow
+  - medicationGrouping
 - subtitle: Add features to data
   desc: Possibility to add cohorts as features and patient characteristics
 - contents:

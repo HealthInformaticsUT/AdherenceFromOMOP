@@ -306,3 +306,42 @@ testthat::test_that("correct general use case with cohort", {
 
   # DBI::dbDisconnect(connection)
 }) #> Test passed 🎉
+
+# medication Grouping
+#####
+
+testthat::test_that("returns NULL and emits message when ingredientGroups is NULL", {
+  mock_cdm <- mockDrugExposure()
+
+  expect_message(
+    result <- medicationGrouping(mock_cdm, ingredientGroups = NULL),
+    "Medication groups not provided"
+  )
+  expect_null(result)
+})
+
+testthat::test_that("uses concept_name nameStyle when ingredients are character names", {
+  mock_cdm <- CodelistGenerator::mockVocabRef()
+
+  groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c("Adalimumab")))
+
+  expect_equal(length(groups), 1)
+})
+
+test_that("uses concept_code nameStyle when ingredients are numeric codes", {
+  mock_cdm <- CodelistGenerator::mockVocabRef()
+
+  groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c(10)))
+
+  expect_equal(length(groups), 1)
+})
+
+test_that("groups are correctly merged from individual codelist entries", {
+
+  mock_cdm <- CodelistGenerator::mockVocabRef()
+
+  groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c("Adalimumab", "Other ingredient")))
+
+  expect_equal(length(groups), 1)
+})
+
