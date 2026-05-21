@@ -171,18 +171,11 @@ reference and cohort id values.</p>
 <h4 id="combining-medication-groups-for-simvastatin-and-rosuvastatin">Combining medication groups for simvastatin and rosuvastatin<a class="anchor" aria-label="anchor" href="#combining-medication-groups-for-simvastatin-and-rosuvastatin"></a>
 </h4>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">medicationGroups</span> <span class="op">&lt;-</span> <span class="fu">CodelistGenerator</span><span class="fu">::</span><span class="fu"><a href="https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html" class="external-link">getDrugIngredientCodes</a></span><span class="op">(</span></span>
-<span>  cdm <span class="op">=</span> <span class="va">cdm</span>,</span>
-<span>  name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Atorvastatin"</span>, <span class="st">"Rosuvastatin"</span>, <span class="st">"Simvastatin"</span>, <span class="st">"Pravastatin"</span>, <span class="st">"Fluvastatin"</span>, <span class="st">"Lovastatin"</span>, <span class="st">"Pitavastatin"</span><span class="op">)</span>,</span>
-<span>  nameStyle <span class="op">=</span> <span class="st">"{concept_name}"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">medicationGroups</span><span class="op">[[</span><span class="st">"simvastatin_rosuvastatin"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">medicationGroups</span><span class="op">[[</span><span class="st">"simvastatin"</span><span class="op">]</span><span class="op">]</span>, <span class="va">medicationGroups</span><span class="op">[[</span><span class="st">"rosuvastatin"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">medicationGroups</span><span class="op">[[</span><span class="st">"simvastatin"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
-<span><span class="va">medicationGroups</span><span class="op">[[</span><span class="st">"rosuvastatin"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="cn">NULL</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">medicationGroups</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">medicationGroups</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/medicationGrouping.html">medicationGrouping</a></span><span class="op">(</span><span class="va">cdm</span>, </span>
+<span>                             ingredientGroups<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>                               simvastatin_rosuvastatin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Simvastatin"</span>, <span class="st">"Rosuvastatin"</span><span class="op">)</span>,</span>
+<span>                               other_statins <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Atorvastatin"</span>, <span class="st">"Pravastatin"</span>, <span class="st">"Fluvastatin"</span>, <span class="st">"Lovastatin"</span>, <span class="st">"Pitavastatin"</span><span class="op">)</span></span>
+<span>                               <span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">adherenceCMA5</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/calculateAdherenceBatched.html">calculateAdherenceBatched</a></span><span class="op">(</span></span>
 <span>  drugExposure <span class="op">=</span> <span class="va">all_statins_cohort</span>,</span>

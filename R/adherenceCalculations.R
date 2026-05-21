@@ -645,9 +645,8 @@ cleanNARows <- function(data) {
 #' @examples
 #' \dontrun{
 #'
-#' mock_cdm <- mockDrugExposure()
-#' groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c(21216049, 35741956), group2 = c(37498042, 42899580)))
-#'
+#'  mock_cdm <- CodelistGenerator::mockVocabRef()
+#' groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c("Adalimumab")))
 #' }
 medicationGrouping <- function(cdm, ingredientGroups = NULL){
 
