@@ -5,7 +5,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom data.table %like%
 #' @importFrom stats setNames
-#' @importFrom dplyr all_of between overlaps
+#' @importFrom dplyr all_of between
 ## usethis namespace: end
 utils::globalVariables(c(
   ".", ".data", "x", "y",
@@ -21,5 +21,6 @@ utils::globalVariables(c(
   "drug_exposure_start_date", "observation_period_duration",
   "concept_class_id", "observation_period_start_date",
   "observation_period_end_date", "year", "n", "has_min_purchases",
-  "purchase_count", "CMA", "nonNASeries", "window.ID"
+  "purchase_count", "CMA", "nonNASeries", "window.ID",
+  "overlaps"
 ))

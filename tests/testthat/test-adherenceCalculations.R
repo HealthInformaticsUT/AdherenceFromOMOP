@@ -195,7 +195,15 @@ testthat::test_that("calculateAdherenceSlidingWindow returns correct structure",
     name = "test_data",
     overwrite = T
   )
-  result <- AdherenceFromOMOP::calculateAdherenceSlidingWindowBatched(cdm = mock_cdm, drugExposure = data, cma = "CMA1")
+  #result <- AdherenceFromOMOP::calculateAdherenceSlidingWindowBatched(cdm = mock_cdm, drugExposure = data, cma = "CMA1")
+
+  result <- AdherenceFromOMOP::calculateAdherenceSlidingWindowBatched(cdm = mock_cdm,
+                                                                      drugExposure = data,
+                                                                      cma = "CMA1",
+                                                                      sliding.window.duration = 1,
+                                                                      sliding.window.duration.unit = "years",#c("days", "weeks", "months", "years")[4],
+                                                                      sliding.window.step.duration = 1,
+                                                                      sliding.window.step.unit = "years")#c("days", "weeks", "months", "years")[4])
 
   testthat::expect_type(result, "list")
   testthat::expect_true("CMA1" %in% unique(dplyr::pull(result, name)))

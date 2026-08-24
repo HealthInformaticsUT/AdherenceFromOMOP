@@ -30,7 +30,9 @@ Imports:
     DBI,
     tidyr,
     lubridate,
-    CodelistGenerator
+    CodelistGenerator,
+    dbplyr,
+    stringr
 Suggests:
     duckdb,
     knitr,

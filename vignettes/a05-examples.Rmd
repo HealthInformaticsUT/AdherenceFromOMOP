@@ -150,9 +150,8 @@ Adding cohorts as features to CMA data requires cohort table as input variable. 
 cohortSet <- CDMConnector::readCohortSet("./inst")
 cdm <- CDMConnector::generateCohortSet(cdm, cohortSet, "cohort")
 
-cohortTable <- dplyr::collect(cdm$cohort)
 
-cma_values_with_cohort_features <- addCohorts(adherenceCMA5, cohortTable)
+cma_values_with_cohort_features <- addCohorts(adherenceCMA5, cdm$cohort)
 ```
 
 Adding body mass index is a separate function.

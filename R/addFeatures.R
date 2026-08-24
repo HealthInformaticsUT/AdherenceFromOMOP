@@ -21,62 +21,57 @@
 #' withBMI <- addBMI(CMA_values, cdm)
 #' }
 addBMI <- function(adherenceData, cdm) {
-  cma_table <- dplyr::collect(adherenceData)
-
-  person_ids <- cma_table %>%
-    dplyr::distinct(person_id) %>%
-    dplyr::pull(person_id)
+  cma_table <- adherenceData
 
   bmi <- cdm$measurement %>%
-    dplyr::filter(person_id %in% person_ids) %>%
+    dplyr::semi_join(cma_table, by = "person_id") %>%
     dplyr::filter(measurement_concept_id == 4245997) %>%
     dplyr::select(
       person_id,
       measurement_date,
       unit_source_value,
       value_source_value
-    ) %>%
-    dplyr::collect()
+    )
 
-  if (all(c("window.start", "window.end") %in% colnames(cma_table))) {
+  # Whether the sliding-window columns exist has to be checked on the table
+  has_windows <- all(c("window.start", "window.end") %in% colnames(cma_table))
+
+  if (has_windows) {
     by <- dplyr::join_by(
       person_id,
-      between(
+      dplyr::between(
         y$measurement_date,
         x$window.start.year.before,
         x$window.start
       )
     )
-    cma_table <- cma_table %>%
-      dplyr::mutate(window.start.year.before = as.Date(window.start - 365)) %>%
-      dplyr::left_join(bmi, by, copy = TRUE)
 
-    # Fallback: for rows without a BMI measurement in window,
-    # use the closest measurement to window.start
+    cma_table <- cma_table %>%
+      dplyr::mutate(window.start.year.before = window.start - 365) %>%
+      dplyr::left_join(bmi, by)
+
+
     rows_without_bmi <- cma_table %>%
       dplyr::filter(is.na(value_source_value)) %>%
       dplyr::select(-measurement_date, -unit_source_value, -value_source_value)
 
-    if (nrow(rows_without_bmi) > 0 && nrow(bmi) > 0) {
-      closest_bmi <- rows_without_bmi %>%
-        dplyr::left_join(bmi, by = "person_id") %>%
-        dplyr::mutate(
-          date_diff = abs(as.numeric(difftime(
-            measurement_date, window.start,
-            units = "days"
-          )))
-        ) %>%
-        dplyr::group_by(name, person_id, window.start, window.end, group) %>%
-        dplyr::arrange(date_diff) %>%
-        dplyr::slice(1) %>%
-        dplyr::ungroup() %>%
-        dplyr::select(-date_diff)
+    closest_bmi <- rows_without_bmi %>%
+      dplyr::left_join(bmi, by = "person_id") %>%
+      dplyr::mutate(
+        date_diff = abs(
+          dplyr::sql("EXTRACT(DAY FROM (measurement_date - window.start))")
+        )
+      ) %>%
+      dplyr::group_by(name, person_id, window.start, window.end, group) %>%
+      dbplyr::window_order(date_diff) %>%
+      dplyr::filter(dplyr::row_number() == 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-date_diff)
 
-      cma_table <- dplyr::bind_rows(
-        cma_table %>% dplyr::filter(!is.na(value_source_value)),
-        closest_bmi
-      )
-    }
+    cma_table <- dplyr::union_all(
+      cma_table %>% dplyr::filter(!is.na(value_source_value)),
+      closest_bmi
+    )
 
     cma_table <- cma_table %>%
       dplyr::mutate(
@@ -108,10 +103,10 @@ addBMI <- function(adherenceData, cdm) {
   } else {
     avg_bmi <- bmi %>%
       dplyr::group_by(person_id) %>%
-      dplyr::summarise(avg_bmi = mean(as.numeric(value_source_value)))
+      dplyr::summarise(avg_bmi = mean(as.numeric(value_source_value), na.rm = TRUE))
 
     cma_table <- cma_table %>%
-      dplyr::left_join(avg_bmi, dplyr::join_by(person_id), copy = TRUE) %>%
+      dplyr::left_join(avg_bmi, dplyr::join_by(person_id)) %>%
       dplyr::mutate(
         bmi_category = dplyr::case_when(
           avg_bmi < 25.0 ~ "Under or normal weight",
@@ -130,7 +125,7 @@ addBMI <- function(adherenceData, cdm) {
 #' Adds cohort columns to cma data
 #'
 #' @inheritParams adherenceDataDoc
-#' @param cohort Cohort table reference or in-memory table with columns:
+#' @param cohort Cohort table reference:
 #'   cohort_definition_id, subject_id, cohort_start_date, cohort_end_date.
 #' @param cohortIdMappingToNames (`list` or `NULL`)
 #'   Optional mapping of cohort IDs to names.
@@ -142,7 +137,11 @@ addBMI <- function(adherenceData, cdm) {
 #' \dontrun{
 #' cdm <- mockDrugExposure()
 #'
-#' chronicDrugExposure <- generateChronicDrugExposure(cdm = cdm, name = "chronic_drug_exposure_table", overwrite = T)
+#' chronicDrugExposure <- generateChronicDrugExposure(
+#'   cdm = cdm,
+#'   name = "chronic_drug_exposure_table",
+#'   overwrite = T
+#' )
 #'
 #' CMA_values <- calculateAdherenceBatched(drugExposure = chronicDrugExposure, cdm = cdm, cma = "CMA5")
 #'
@@ -161,10 +160,12 @@ addBMI <- function(adherenceData, cdm) {
 #' withCohort <- addCohorts(CMA_values, cohortTable)
 #' }
 addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
-  cmaTable <- dplyr::collect(adherenceData)
-  cohort <- dplyr::collect(cohort)
 
-  uniqueCohorts <- unique(cohort$cohort_definition_id)
+  cmaTable <- adherenceData %>% dplyr::rename_with(tolower)
+
+  uniqueCohorts <- cohort %>%
+    dplyr::distinct(cohort_definition_id) %>%
+    dplyr::pull(cohort_definition_id)
 
   if (is.null(cohortIdMappingToNames)) {
     cohortIdMappingToNames <- list()
@@ -177,15 +178,17 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
     paste0("time_in_cohort_", uniqueCohorts)
   )
 
+  has_windows <- all(c("window.start", "window.end") %in% colnames(cmaTable))
+
   # joining cma and cohort information differ whether or not sliding window was used
-  if (all(c("window.start", "window.end") %in% colnames(cmaTable))) {
+  if (has_windows) {
     cma_with_cohort <- cohort %>%
       dplyr::mutate(cohort_name = cohort_definition_id) %>%
       dplyr::right_join(
         cmaTable,
         dplyr::join_by(
           y$person_id == x$subject_id,
-          dplyr::overlaps(
+          overlaps(
             x$cohort_start_date,
             x$cohort_end_date,
             y$window.start,
@@ -207,7 +210,7 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
         cmaTable,
         dplyr::join_by(
           y$person_id == x$subject_id,
-          dplyr::overlaps(
+          overlaps(
             x$cohort_start_date,
             x$cohort_end_date,
             y$observation_window_start,
@@ -228,6 +231,28 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
         window.end = observation_period_end_date,
       )
   }
+
+  # Aggregate down to (subject x window x cohort) *before* collecting.
+  # This is the step that collapses tens of millions of exposure rows to a
+  # small result, so it's the right place to materialise.
+  cma_with_cohort <- cma_with_cohort %>%
+    dplyr::group_by(
+      subject_id,
+      name,
+      window.id,
+      window.start,
+      window.end,
+      cma,
+      group,
+      cohort_name,
+      cohort_definition_id
+    ) %>%
+    dplyr::summarise(
+      time_in_cohort = sum(time_in_cohort, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+  cma_with_cohort <- dplyr::collect(cma_with_cohort)
 
   if (all(is.na(unique(cma_with_cohort$cohort_definition_id)))) {
     cli::cli_alert_info("Cohort time periods and time periods CMA is calculated for don't match.")
@@ -259,10 +284,12 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
       cma,
       group
     ) %>%
-    dplyr::summarise(dplyr::across(all_of(features), sum)) %>%
-    dplyr::mutate(dplyr::across(all_of(features[1:length(features) / 2]), ~ ifelse(. > 0, 1, 0))) %>%
-    dplyr::rename(all_of(cohort_names)) %>%
-    dplyr::ungroup() %>%
+    dplyr::summarise(dplyr::across(dplyr::all_of(features), sum), .groups = "drop") %>%
+    dplyr::mutate(dplyr::across(
+      dplyr::all_of(features[1:(length(features) / 2)]),
+      ~ ifelse(. > 0, 1, 0)
+    )) %>%
+    dplyr::rename(dplyr::all_of(cohort_names)) %>%
     dplyr::arrange(subject_id)
 
   return(cma_table_with_data)
@@ -294,10 +321,18 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
 #' cdm <- mockDrugExposure()
 #' conceptSet <- CodelistGenerator::getDrugIngredientCodes(cdm, name = "Atorvastatin")
 #'
-#' drugExposure <- generateChronicDrugExposure(cdm = cdm, conceptSet = conceptSet, name = "drug_exposure")
+#' drugExposure <- generateChronicDrugExposure(
+#'   cdm = cdm,
+#'   conceptSet = conceptSet,
+#'   name = "drug_exposure"
+#' )
 #' adherenceData <- calculateAdherenceBatched(drugExposure, cdm, cma = "CMA5")
 #'
-#' counts <- summarisePatientCounts(adherenceData = adherenceData, drugExposure = drugExposure, cdm = cdm)
+#' counts <- summarisePatientCounts(
+#'   adherenceData = adherenceData,
+#'   drugExposure = drugExposure,
+#'   cdm = cdm
+#' )
 #' }
 summarisePatientCounts <- function(adherenceData = NULL,
                                    drugExposure = NULL,
@@ -325,18 +360,13 @@ summarisePatientCounts <- function(adherenceData = NULL,
   }
   if (!is.null(drugExposure)) {
     count_n_for_time_t <- drugExposure %>%
-      dplyr::collect() %>%
-      dplyr::group_by(person_id) %>%
       dplyr::mutate(year = lubridate::year(drug_exposure_start_date)) %>%
       dplyr::group_by(year, person_id) %>%
       dplyr::summarise(purchase_count = dplyr::n(), .groups = "drop") %>%
-      dplyr::mutate(has_min_purchases = purchase_count >= n) %>%
-      dplyr::group_by(year) %>%
-      dplyr::summarise(
-        n_persons = sum(has_min_purchases),
-        .groups = "drop"
-      ) %>%
-      dplyr::distinct()
+      dplyr::filter(purchase_count >= n) %>%
+      dplyr::count(year, name = "n_persons") %>%
+      dplyr::arrange(year) %>%
+      dplyr::collect()
 
     result["Yearly drug exposure record count"] <- list(count_n_for_time_t)
   }

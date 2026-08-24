@@ -43,7 +43,10 @@ testthat::test_that("addCohorts testing", {
     cohort_end_date = observ_dates$observation_period_end_date
   )
 
-  withCohort <- addCohorts(CMA_values, cohortTable)
+  cdm <- omopgenerics::insertTable(cdm, name = "test_cohort", table = cohortTable)
+
+  withCohort <- addCohorts(CMA_values, cdm$test_cohort)
+  #withCohort <- addCohorts(CMA_values, cohortTable)
 
   testthat::expect_true(!is.null(withCohort))
 })
@@ -68,8 +71,10 @@ testthat::test_that("addCohorts testing with sliding window", {
     cohort_start_date = observ_dates$observation_period_start_date,
     cohort_end_date = observ_dates$observation_period_end_date
   )
+  cdm <- omopgenerics::insertTable(cdm, name = "test_cohort", table = cohortTable)
 
-  withCohort <- addCohorts(CMA_values, cohortTable)
+  withCohort <- addCohorts(CMA_values, cdm$test_cohort)
+  #withCohort <- addCohorts(CMA_values, cohortTable)
 
   testthat::expect_true(!is.null(withCohort))
 })
@@ -83,6 +88,9 @@ testthat::test_that("addbmi testing with sliding window", {
   CMA_values <- calculateAdherenceSlidingWindowBatched(cdm = cdm, drugExposure = chronicDrugExposure, cma = cma_types)
 
   withBMI <- addBMI(CMA_values, cdm)
+  #cdm <- omopgenerics::insertTable(cdm, name = "test_cohort", table = cohortTable)
+
+  #withCohort <- addCohorts(CMA_values, cdm$test_cohort)
 
   testthat::expect_true(!is.null(withBMI))
 })

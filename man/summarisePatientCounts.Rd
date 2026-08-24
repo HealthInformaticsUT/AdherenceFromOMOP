@@ -46,9 +46,17 @@ and drug exposure data.
 cdm <- mockDrugExposure()
 conceptSet <- CodelistGenerator::getDrugIngredientCodes(cdm, name = "Atorvastatin")
 
-drugExposure <- generateChronicDrugExposure(cdm = cdm, conceptSet = conceptSet, name = "drug_exposure")
+drugExposure <- generateChronicDrugExposure(
+  cdm = cdm,
+  conceptSet = conceptSet,
+  name = "drug_exposure"
+)
 adherenceData <- calculateAdherenceBatched(drugExposure, cdm, cma = "CMA5")
 
-counts <- summarisePatientCounts(adherenceData = adherenceData, drugExposure = drugExposure, cdm = cdm)
+counts <- summarisePatientCounts(
+  adherenceData = adherenceData,
+  drugExposure = drugExposure,
+  cdm = cdm
+)
 }
 }

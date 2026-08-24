@@ -96,7 +96,7 @@ Medication availability based on days supplied (excluding last event)
 -   Computes: **sum(days_supply values except last) / (days between first and last event)**
 
 ```{r,warning = FALSE, echo=FALSE, message = FALSE, eval = FALSE}
-plot(cma_values$CMA1, show.legend = TRUE, align.all.patients = FALSE, align.first.event.at.zero = TRUE, period.in.days = 60)
+plot(cma_values$CMA1, show.legend = TRUE, legend.bkg.opacity = 1, print.CMA  = FALSE, plot.CMA = F, align.all.patients = FALSE, align.first.event.at.zero = TRUE, period.in.days = 60)
 
 # 2:  (60+90) / 210
 # 1: (30+90+180) / 300
