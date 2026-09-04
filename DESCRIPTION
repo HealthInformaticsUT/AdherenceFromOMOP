@@ -13,7 +13,6 @@ Description: Adherence is a concept that indicates how well does the patient fol
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.3
 Depends: 
     R (>= 2.10)
 Imports: 
@@ -45,3 +44,4 @@ VignetteBuilder:
 Config/testthat/edition: 3
 URL: https://healthinformaticsut.github.io/AdherenceFromOMOP/index.html, https://github.com/HealthInformaticsUT/AdherenceFromOMOP, 
 BugReports: https://github.com/HealthInformaticsUT/AdherenceFromOMOP/issues
+Config/roxygen2/version: 8.1.0

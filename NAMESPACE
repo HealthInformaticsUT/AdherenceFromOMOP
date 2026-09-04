@@ -11,7 +11,9 @@ export(medicationGrouping)
 export(mockDrugExposure)
 export(summarisePatientCounts)
 importFrom(data.table,"%like%")
-importFrom(dplyr,all_of)
-importFrom(dplyr,between)
+importFrom(dplyr,
+  all_of,
+  between
+)
 importFrom(magrittr,"%>%")
 importFrom(stats,setNames)

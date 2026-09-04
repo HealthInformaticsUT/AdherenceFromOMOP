@@ -12,7 +12,7 @@ Adherence is a concept that indicates how well does the patient follow the healt
 Useful links:
 \itemize{
   \item \url{https://healthinformaticsut.github.io/AdherenceFromOMOP/index.html}
-  \item \url{https://github.com/HealthInformaticsUT/AdherenceFromOMOP,}
+  \item \url{https://github.com/HealthInformaticsUT/AdherenceFromOMOP},
   \item Report bugs at \url{https://github.com/HealthInformaticsUT/AdherenceFromOMOP/issues}
 }
 
@@ -22,6 +22,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Greete Kelli Aava \email{greete.kelli.aava@ut.ee}
   \item Johannes Holm \email{yourself@somewhere.net}
 }
 

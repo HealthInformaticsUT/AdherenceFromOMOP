@@ -10,6 +10,7 @@ calculateAdherenceSlidingWindowBatched(
   name = "adherenceFromOMOP_results",
   cma = c("CMA1", "CMA2", "CMA3", "CMA4", "CMA5", "CMA6", "CMA7", "CMA8", "CMA9"),
   medicationGroup = NULL,
+  groupByRoute = FALSE,
   batchSize = 10000,
   ...
 )
@@ -30,6 +31,12 @@ for details on each CMA type.}
 \item{medicationGroup}{(`list` or `NULL`) Named list where each element contains
 drug_concept_id values for a medication group. CMA is calculated separately for
 each group. If `NULL`, all medications are treated as one group.}
+
+\item{groupByRoute}{(`logical(1)`) If `TRUE`, further splits each medication
+group by `route_concept_id`, calculating CMA separately for each route
+found within the group. Drug exposure records with a missing or zero
+`route_concept_id` remain part of the general ingredient-level group.
+Default: `FALSE`.}
 
 \item{batchSize}{(`numeric(1)`) Number of subjects to process in each batch.
 Default: 1000. Increase for better performance with large datasets, decrease
