@@ -9,11 +9,11 @@
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/articles/index.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/authors.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/index.html</loc></url>
+<url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/AdherenceFromOMOP-package.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/addBMI.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/addCohorts.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/addPatientInformation.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/adherenceDataDoc.html</loc></url>
-<url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/AdherenceFromOMOP-package.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/batchSizeDoc.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/calculateAdherence.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/calculateAdherenceBatched.html</loc></url>
@@ -25,6 +25,7 @@
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/conceptSetDoc.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/drugExposureDoc.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/generateChronicDrugExposure.html</loc></url>
+<url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/groupByRouteDoc.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/index.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/indexDateDoc.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/loadData.html</loc></url>
@@ -32,6 +33,7 @@
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/medicationGrouping.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/mockDrugExposure.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/nameDoc.html</loc></url>
+<url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/splitGroupByRoute.html</loc></url>
 <url><loc>https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/summarisePatientCounts.html</loc></url>
 </urlset>
 

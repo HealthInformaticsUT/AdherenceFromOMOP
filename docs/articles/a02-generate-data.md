@@ -1,0 +1,71 @@
+# Data generation
+
+**Note:** Before running the code in this vignette, make sure you have
+installed and loaded all required packages. See the [Getting
+Started](https://healthinformaticsut.github.io/AdherenceFromOMOP/articles/a01-getting-started.md)
+vignette for installation instructions.
+
+It is possible to calculate adherence without using
+generateChronicDrugExposure(). However guidelines are only provided for
+using with it.
+
+## Working with cohorts
+
+It is useful to restrict adherence calculations to only those
+individuals who belong to a specific cohort. AdherenceFromOMOP supports
+this directly through the `cohort` and `cohortId` arguments in
+**generateChronicDrugExposure()**
+
+``` r
+
+# preparation, no need to replicate
+cdm <- mockDrugExposure()
+
+cohort_table <- dplyr::tibble(
+  cohort_definition_id = 1, subject_id = 1,
+  cohort_start_date = as.Date("1980-01-01"),
+  cohort_end_date = as.Date("2020-01-10")
+)
+
+DBI::dbWriteTable(conn = CDMConnector::cdmCon(cdm), name = DBI::Id(schema = "main", table = "cohort"), value = cohort_table, append = TRUE)
+
+cohort_ref <- dplyr::tbl(CDMConnector::cdmCon(cdm), "cohort")
+```
+
+Only drug exposure events that satisfy the following conditions are
+included:
+
+1.  The person_id is included in the cohort, and
+
+2.  drug_exposure_start_date falls within the cohort start–end period
+
+``` r
+
+chronicDrugExposureCohort <- generateChronicDrugExposure(
+  cdm = cdm,
+  name = "test_table",
+  overwrite = T,
+  cohort = cohort_ref,
+  cohortId = 1
+)
+```
+
+## Using conceptSet variable
+
+You may optionally restrict the included drug exposure events to a
+specific list of **drug_concept_id** values using the `conceptSet`
+argument. This list can be generated manually or, more conveniently,
+with **CodelistGenerator::getDrugIngredientCodes()**.
+
+``` r
+
+ingredients <- c(42899580, 37498042)
+medicationGroups <- CodelistGenerator::getDrugIngredientCodes(
+  cdm = cdm,
+  name = ingredients,
+  nameStyle = "{concept_name}"
+)
+
+ingredientNames <- names(medicationGroups)
+drug_concept_id_lst <- unlist(medicationGroups, use.names = F)
+```

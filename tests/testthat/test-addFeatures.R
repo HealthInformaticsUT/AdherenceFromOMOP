@@ -38,7 +38,7 @@ testthat::test_that("addCohorts testing", {
 
   cohortTable <- dplyr::tibble(
     cohort_definition_id = 1,
-    subject_id = 1,
+    #subject_id = 1,
     cohort_start_date = observ_dates$observation_period_start_date,
     cohort_end_date = observ_dates$observation_period_end_date
   )
@@ -103,7 +103,7 @@ testthat::test_that("testing summarisePatientCounts with cohort", {
     dplyr::select(observation_period_start_date, observation_period_end_date)
 
   cohort_table <- dplyr::tibble(
-    cohort_definition_id = 1, subject_id = 1,
+    cohort_definition_id = 1,
     cohort_start_date = dplyr::pull(observ_dates, observation_period_start_date),
     cohort_end_date = dplyr::pull(observ_dates, observation_period_end_date)
   )
@@ -115,7 +115,10 @@ testthat::test_that("testing summarisePatientCounts with cohort", {
 
   CMA_values <- calculateAdherenceBatched(drugExposure = chronicDrugExposure, cdm = cdm, cma = "CMA5")
 
-  counts <- summarisePatientCounts(cdm = cdm, adherenceData = CMA_values, drugExposure = chronicDrugExposure, cohort = cohort_ref, cohortId = 1)
+  #omopgenerics::newCdmTable(table = cohort_table, src = cdm, name = "cohort1")
+  #omopgenerics::newCohortTable(cohort_table)
+
+  counts <- summarisePatientCounts(cdm = cdm, adherenceData = CMA_values, drugExposure = chronicDrugExposure)
 
   testthat::expect_true(!is.null(counts))
 })

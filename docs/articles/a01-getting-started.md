@@ -1,0 +1,129 @@
+# Getting Started
+
+## Getting started with the basics
+
+### Installation
+
+#### Install AdherenceFromOMOP
+
+``` r
+
+# Install from GitHub
+devtools::install_github("https://github.com/HealthInformaticsUT/AdherenceFromOMOP/")
+```
+
+### Database connection with CDMConnector
+
+AdherenceFromOMOP relies on CDMConnector for database connection and
+other options are currently unavailable.
+
+``` r
+
+readRenviron("~/.Renviron")
+
+writePrefix <- "adherencefromomop_"
+
+db <- DBI::dbConnect(
+  RPostgres::Postgres(),
+  dbname = Sys.getenv("DB_NAME"),
+  host = Sys.getenv("DB_HOST"),
+  user = Sys.getenv("DB_USERNAME"),
+  password = Sys.getenv("DB_PASSWORD"),
+  port = Sys.getenv("DB_PORT")
+)
+
+cdm <- CDMConnector::cdmFromCon(
+  con = db,
+  cdmSchema = Sys.getenv("OHDSI_CDM"),
+  writeSchema = Sys.getenv("OHDSI_WRITE"),
+  writePrefix = writePrefix
+)
+```
+
+### Calculating adherence
+
+Using adherenceFromOMOP involves two main steps. First, the required
+data must be retrieved and written to a designated table in the
+database.
+
+``` r
+
+# Step 0 - cdm connection
+# for demos mock dataset is recommended
+cdm <- mockDrugExposure()
+```
+
+To extract the necessary data, use generateChronicDrugExposure. For
+conceptSet input variable, which expects drug_concept_id values in a
+list, it is recommended to use
+[CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
+
+``` r
+
+# recommended method for acquiring drug_concept_id values
+drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c(42899580, 37498042), nameStyle = "{concept_name}")
+
+# Step 1 - data generation
+chronicDrugExposure <- generateChronicDrugExposure(
+  cdm = cdm,
+  conceptSet = drugIngredientCodes,
+  name = "drug_exposure_demo",
+  overwrite = T
+)
+
+chronicDrugExposure
+```
+
+Medication groups can be defined to calculate adherence by therapeutic
+category. Here, we reuse the earlier drugIngredientCodes object. To
+compute adherence, for large datasets use the batched functions.
+
+``` r
+
+# Step 2 - calculating adherence
+adherence <- calculateAdherenceBatched(
+  drugExposure = chronicDrugExposure,
+  cdm = cdm,
+  medicationGroup = drugIngredientCodes,
+  name = "basic_adherence",
+  cma = c(
+    "CMA3"
+  )
+)
+```
+
+### Adding features to CMA values
+
+You can add features either to the sliding-window periods or to the
+overall observation period.
+
+#### Adding BMI values
+
+``` r
+
+# demo data shows only NA for avg_bmi
+cma_with_bmi <- addBMI(adherence, cdm)
+```
+
+#### Adding cohort as columns
+
+Collect necessary cohorts beforehand, for example to the ./inst folder.
+
+``` r
+
+pathToCohorts <- paste0(getwd(), "/inst/") # path to cohort definitions
+
+cohortSet <- CDMConnector::readCohortSet(pathToCohorts)
+cdm <- CDMConnector::generateCohortSet(cdm, cohortSet, name = "cohort")
+
+cohort <- dplyr::collect(cdm$cohort)
+
+adherence_with_cohorts_as_features <- addCohorts(adherence, cohort, cohortIdMappingToNames = cohortSet)
+```
+
+#### Number of people in cohort
+
+``` r
+
+stats <- summarisePatientCounts(cdm = cdm, drugExposure = chronicDrugExposure, adherenceData = adherence)
+```

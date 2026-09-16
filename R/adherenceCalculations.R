@@ -183,10 +183,10 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
       }
 
       groupSplits <- if (groupByRoute) splitGroupByRoute(filteredData, group) else stats::setNames(list(filteredData), group)
-      print(groupSplits)
+      #print(groupSplits)
       for (subGroup in names(groupSplits)) {
         filteredData <- groupSplits[[subGroup]]
-        print(subGroup)
+        #print(subGroup)
         if (nrow(filteredData) < 1){
           next
         }

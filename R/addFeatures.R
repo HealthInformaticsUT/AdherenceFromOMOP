@@ -126,7 +126,7 @@ addBMI <- function(adherenceData, cdm) {
 #'
 #' @inheritParams adherenceDataDoc
 #' @param cohort Cohort table reference:
-#'   cohort_definition_id, subject_id, cohort_start_date, cohort_end_date.
+#'   cohort_definition_id, person_id, cohort_start_date, cohort_end_date.
 #' @param cohortIdMappingToNames (`list` or `NULL`)
 #'   Optional mapping of cohort IDs to names.
 #'
@@ -152,7 +152,7 @@ addBMI <- function(adherenceData, cdm) {
 #'
 #' cohortTable <- dplyr::tibble(
 #'   cohort_definition_id = 1,
-#'   subject_id = 1,
+#'   person_id = 1,
 #'   cohort_start_date = observ_dates$observation_period_start_date,
 #'   cohort_end_date = observ_dates$observation_period_end_date
 #' )
@@ -187,7 +187,6 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
       dplyr::right_join(
         cmaTable,
         dplyr::join_by(
-          y$person_id == x$subject_id,
           overlaps(
             x$cohort_start_date,
             x$cohort_end_date,
@@ -200,7 +199,7 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
         overlap_start = pmax(cohort_start_date, window.start),
         overlap_end = pmin(cohort_end_date, window.end),
         time_in_cohort = as.integer(pmax(
-          0, overlap_end - overlap_start + 1
+          0, overlap_end - overlap_start
         ))
       )
   } else {
@@ -209,7 +208,6 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
       dplyr::right_join(
         cmaTable,
         dplyr::join_by(
-          y$person_id == x$subject_id,
           overlaps(
             x$cohort_start_date,
             x$cohort_end_date,
@@ -222,7 +220,7 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
         overlap_start = pmax(cohort_start_date, observation_window_start),
         overlap_end = pmin(cohort_end_date, observation_period_end_date),
         time_in_cohort = as.integer(pmax(
-          0, overlap_end - overlap_start + 1
+          0, overlap_end - overlap_start
         ))
       ) %>%
       dplyr::mutate(
@@ -232,12 +230,10 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
       )
   }
 
-  # Aggregate down to (subject x window x cohort) *before* collecting.
-  # This is the step that collapses tens of millions of exposure rows to a
-  # small result, so it's the right place to materialise.
+  # Aggregate down to (subject x window x cohort)
   cma_with_cohort <- cma_with_cohort %>%
     dplyr::group_by(
-      subject_id,
+      person_id,
       name,
       window.id,
       window.start,
@@ -252,9 +248,13 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
       .groups = "drop"
     )
 
-  cma_with_cohort <- dplyr::collect(cma_with_cohort)
+  # Single-value check ("did anything match?"), not a collect of the data.
+  matched_rows <- cma_with_cohort %>%
+    dplyr::filter(!is.na(cohort_definition_id)) %>%
+    dplyr::count() %>%
+    dplyr::pull()
 
-  if (all(is.na(unique(cma_with_cohort$cohort_definition_id)))) {
+  if (matched_rows == 0) {
     cli::cli_alert_info("Cohort time periods and time periods CMA is calculated for don't match.")
     return(NULL)
   }
@@ -267,16 +267,27 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
     paste0("time_in_", cohortIdMappingToNames$cohort_name)
   ))
 
+  # Build one indicator + one time-in-cohort column per cohort id
+  # Each row's own cohort_definition_id determines which pair of columns
+  # gets a non-zero value; the rest are 0, so summing per (subject, window,
+  # group) below reproduces what the wide pivot + sum used to do.
+  indicator_exprs <- rlang::set_names(
+    lapply(uniqueCohorts, function(id) {
+      rlang::expr(dplyr::if_else(cohort_definition_id == !!id, 1L, 0L, missing = 0L))
+    }),
+    paste0("cohort_definition_id_", uniqueCohorts)
+  )
+  time_in_cohort_exprs <- rlang::set_names(
+    lapply(uniqueCohorts, function(id) {
+      rlang::expr(dplyr::if_else(cohort_definition_id == !!id, time_in_cohort, 0, missing = 0))
+    }),
+    paste0("time_in_cohort_", uniqueCohorts)
+  )
+
   cma_table_with_data <- cma_with_cohort %>%
-    tidyr::pivot_wider(
-      names_from = cohort_name,
-      values_from = c(cohort_definition_id, time_in_cohort),
-      values_fill = 0,
-      names_glue = "{.value}_{cohort_name}"
-    ) %>%
-    dplyr::rename_with(tolower) %>%
+    dplyr::mutate(!!!indicator_exprs, !!!time_in_cohort_exprs) %>%
     dplyr::group_by(
-      subject_id,
+      person_id,
       name,
       window.id,
       window.start,
@@ -284,13 +295,13 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
       cma,
       group
     ) %>%
-    dplyr::summarise(dplyr::across(dplyr::all_of(features), sum), .groups = "drop") %>%
+    dplyr::summarise(dplyr::across(dplyr::all_of(features), ~ sum(., na.rm = TRUE)), .groups = "drop") %>%
     dplyr::mutate(dplyr::across(
       dplyr::all_of(features[1:(length(features) / 2)]),
       ~ ifelse(. > 0, 1, 0)
     )) %>%
     dplyr::rename(dplyr::all_of(cohort_names)) %>%
-    dplyr::arrange(subject_id)
+    dplyr::arrange(person_id)
 
   return(cma_table_with_data)
 }
@@ -304,10 +315,6 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
 #' @inheritParams adherenceDataDoc
 #' @inheritParams drugExposureDoc
 #' @inheritParams cdmDoc
-#' @param cohort (`tbl` or `NULL`) Optional cohort table reference
-#'  for additional counts.
-#' @param cohortId (`numeric` or `NULL`) Optional vector of
-#'  cohort_definition_id values.
 #' @param n (`numeric(1)`) Minimum number of rows per year for a person
 #'  to be included
 #'   in 'Yearly drug exposure record count' table. Default: 1.
@@ -337,8 +344,6 @@ addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
 summarisePatientCounts <- function(adherenceData = NULL,
                                    drugExposure = NULL,
                                    cdm = NULL,
-                                   cohort = NULL,
-                                   cohortId = NULL,
                                    n = 1) {
   result <- list()
 
@@ -371,16 +376,5 @@ summarisePatientCounts <- function(adherenceData = NULL,
     result["Yearly drug exposure record count"] <- list(count_n_for_time_t)
   }
 
-  if (!is.null(cohort) & !is.null(cohortId)) {
-    cohortFiltered <- cohort %>%
-      dplyr::filter(cohort_definition_id %in% cohortId)
-
-    count <- cohortFiltered %>%
-      dplyr::select(subject_id) %>%
-      dplyr::distinct() %>%
-      dplyr::count() %>%
-      dplyr::pull()
-    result["Number of people in cohort"] <- as.integer(count)
-  }
   return(result)
 }

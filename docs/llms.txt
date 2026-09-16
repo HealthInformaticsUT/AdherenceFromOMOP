@@ -1,0 +1,171 @@
+# Adherence from OMOP
+
+## Overview
+
+Adherence is a concept that indicates how well does the patient follow
+the healthcare provider’s recommendation. Medication adherence
+specifically shows if the patient follows their medication regimen or
+are there any gaps. This is important for medications which are meant to
+be consumed for chronic diseases, where the efficacy of the treatment is
+closely correlated with the continuity of medication consumption. One
+possibility to measure adherence is secondary database analysis.
+
+AdherenceFromOMOP contains functions to measure chronic medication
+adherence using drug_exposure table in data mapped to the OMOP Common
+Data Model. The package supports:
+
+- generating drug exposure records for cohorts and/or specific
+  medications
+
+- calculating medication adherence for observation period
+
+- calculating medication adherence using sliding window approach to view
+  specific periods in observation period
+
+- add cohort features as columns to data returned by adherence functions
+
+- view the number of people in areas of interest
+
+## Getting started with the basics
+
+### Install package
+
+``` r
+
+devtools::install_github("https://github.com/HealthInformaticsUT/AdherenceFromOMOP/")
+library(AdherenceFromOMOP)
+```
+
+### Database connection with CDMConnector
+
+AdherenceFromOMOP relies on CDMConnector for database connection and
+other options are currently unavailable.
+
+``` r
+
+readRenviron("~/.Renviron")
+
+writePrefix <- "adherencefromomop_"
+
+db <- DBI::dbConnect(
+  RPostgres::Postgres(),
+  dbname = Sys.getenv("DB_NAME"),
+  host = Sys.getenv("DB_HOST"),
+  user = Sys.getenv("DB_USERNAME"),
+  password = Sys.getenv("DB_PASSWORD"),
+  port = Sys.getenv("DB_PORT")
+)
+
+cdm <- CDMConnector::cdmFromCon(
+  con = db,
+  cdmSchema = Sys.getenv("OHDSI_CDM"),
+  writeSchema = Sys.getenv("OHDSI_WRITE"),
+  writePrefix = writePrefix
+)
+```
+
+### Calculating adherence
+
+Using adherenceFromOMOP involves two main steps. First, the required
+data must be retrieved and written to a designated table in the
+database.
+
+To extract the necessary data, use generateChronicDrugExposure. For
+conceptSet input variable, which expects drug_concept_id values in a
+list, it is recommended to use
+[CodelistGenerator](https://darwin-eu.github.io/CodelistGenerator/reference/getDrugIngredientCodes.html).
+
+``` r
+
+# recommended method for acquiring drug_concept_id values
+drugIngredientCodes <- CodelistGenerator::getDrugIngredientCodes(cdm = cdm, name = c("Atorvastatin"), nameStyle = "{concept_name}")
+
+# Step 1 - data generation
+chronicDrugExposure <- generateChronicDrugExposure(
+  cdm = cdm,
+  conceptSet = drugIngredientCodes,
+  name = "chronic_drug_exposure_table",
+  overwrite = T
+)
+
+chronicDrugExposure
+```
+
+There are multiple options for calculating adherence, for more
+information check out the documentation.
+
+``` r
+
+# Step 2
+adherence <- calculateAdherence(drugExposure = chronicDrugExposure, cma = c("CMA5"))
+adherence
+```
+
+# Package index
+
+### Data generation
+
+Retrieves records from drug exposure table
+
+- [`generateChronicDrugExposure()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/generateChronicDrugExposure.md)
+  : Get drug exposure entries for adherence calculations
+
+### Adherence calculations
+
+Functions used to calculate medication adherence
+
+- [`calculateAdherenceBatched()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/calculateAdherenceBatched.md)
+  : Calculate adherence (batched processing)
+- [`calculateAdherenceSlidingWindowBatched()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/calculateAdherenceSlidingWindowBatched.md)
+  : Calculate adherence with sliding window approach (batched
+  processing)
+- [`calculateAdherence()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/calculateAdherence.md)
+  : Calculate medication adherence
+- [`calculateAdherenceSlidingWindow()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/calculateAdherenceSlidingWindow.md)
+  : Calculate adherence using sliding window approach
+- [`medicationGrouping()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/medicationGrouping.md)
+  : Function for grouping medications
+
+### Add features to data
+
+Possibility to add cohorts as features and patient characteristics
+
+- [`addCohorts()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/addCohorts.md)
+  : Adds cohort columns to cma data
+- [`addBMI()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/addBMI.md)
+  : adds bmi values to CMA values
+
+### Population stats
+
+View statistics
+
+- [`summarisePatientCounts()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/summarisePatientCounts.md)
+  : Summarise patient counts
+
+### Mockdata generation
+
+Testing package, demos, internal functions
+
+- [`mockDrugExposure()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/mockDrugExposure.md)
+  : Mock database for testing package
+- [`cleanNARows()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/cleanNARows.md)
+  : Remove rows with NA CMA values and reset window IDs
+- [`addPatientInformation()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/addPatientInformation.md)
+  : Add patient information to CMA results
+- [`loadData()`](https://healthinformaticsut.github.io/AdherenceFromOMOP/reference/loadData.md)
+  : Load and prepare data for adherence calculations
+
+# Articles
+
+### All vignettes
+
+- [Getting
+  Started](https://healthinformaticsut.github.io/AdherenceFromOMOP/articles/a01-getting-started.md):
+- [Data
+  generation](https://healthinformaticsut.github.io/AdherenceFromOMOP/articles/a02-generate-data.md):
+- [Calculating
+  Adherence](https://healthinformaticsut.github.io/AdherenceFromOMOP/articles/a03-calculating-adherence.md):
+- [Intro to
+  CMA](https://healthinformaticsut.github.io/AdherenceFromOMOP/articles/a04-adherence.md):
+- [Example use cases with
+  statins](https://healthinformaticsut.github.io/AdherenceFromOMOP/articles/a05-examples.md):
