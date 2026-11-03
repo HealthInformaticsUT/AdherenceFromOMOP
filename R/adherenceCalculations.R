@@ -191,30 +191,27 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
           next
         }
 
-        cmaSlidingWindowMedGroup <- tryCatch(
-          {
-            result <- AdhereR::CMA_sliding_window(
-              CMA.to.apply = i,
-              data = filteredData,
-              ID.colname = "person_id",
-              event.date.colname = "drug_exposure_start_date",
-              event.duration.colname = "days_supply",
-              medication.class.colname = "drug_concept_id",
-              followup.window.duration = "followup_period_duration",
-              observation.window.duration = "observation_period_duration",
-              observation.window.start = "observation_window_start",
-              followup.window.start = "observation_period_start_date",
-              ...
-            )
-            dplyr::mutate(result$CMA, group = subGroup)
-          },
-          error = function(e) {
-            cli::cli_alert_danger("{i} for {subGroup} failed: {e$message}")
-            NULL
+        groupResult <- slidingWindowCMA(filteredData, cma = i, ...)
+        cmaSlidingWindowMedGroup <- groupResult$cma
+
+        if (is.null(cmaSlidingWindowMedGroup) && !is.null(groupResult$problem)) {
+          # AdhereR fails the whole call if any patient fails, so retry per patient
+          cli::cli_alert_warning("{i} for {subGroup} failed for the whole batch ({groupResult$problem}), retrying per patient.")
+          perPatient <- lapply(split(filteredData, filteredData$person_id), slidingWindowCMA, cma = i, ...)
+          failed <- vapply(perPatient, function(x) is.null(x$cma) && !is.null(x$problem), logical(1))
+          problems <- vapply(perPatient[failed], `[[`, character(1), "problem")
+          for (problem in unique(problems)) {
+            failedIds <- names(problems)[problems == problem]
+            cli::cli_alert_danger("{i} for {subGroup} failed for {length(failedIds)} person(s) ({problem}): {failedIds}")
           }
-        )
+          cmaSlidingWindowMedGroup <- dplyr::bind_rows(lapply(perPatient, `[[`, "cma"))
+          if (nrow(cmaSlidingWindowMedGroup) == 0) {
+            cmaSlidingWindowMedGroup <- NULL
+          }
+        }
 
         if (!is.null(cmaSlidingWindowMedGroup)) {
+          cmaSlidingWindowMedGroup <- dplyr::mutate(cmaSlidingWindowMedGroup, group = subGroup)
           cma_med <- rbind(cma_med, cmaSlidingWindowMedGroup)
         }
       }
@@ -237,6 +234,50 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
   }
 
   return(result)
+}
+
+#' Run AdhereR sliding window CMA
+#'
+#' Wraps AdhereR::CMA_sliding_window, which signals failure by returning NULL
+#' (or occasionally by throwing) rather than by a regular R error.
+#'
+#' @param data Data frame prepared by loadData.
+#' @param cma (`character(1)`) CMA to apply.
+#' @param ... Additional arguments passed to AdhereR::CMA_sliding_window.
+#'
+#' @returns A list with `cma` (the CMA data frame, or NULL if AdhereR returned nothing)
+#'   and `problem` (the first AdhereR error/warning message, or NULL).
+#'
+#' @keywords internal
+slidingWindowCMA <- function(data, cma, ...) {
+  problem <- NULL
+  result <- withCallingHandlers(
+    tryCatch(
+      AdhereR::CMA_sliding_window(
+        CMA.to.apply = cma,
+        data = data,
+        ID.colname = "person_id",
+        event.date.colname = "drug_exposure_start_date",
+        event.duration.colname = "days_supply",
+        medication.class.colname = "drug_concept_id",
+        followup.window.duration = "followup_period_duration",
+        observation.window.duration = "observation_period_duration",
+        observation.window.start = "observation_window_start",
+        followup.window.start = "observation_period_start_date",
+        ...
+      ),
+      error = function(e) {
+        problem <<- conditionMessage(e)
+        NULL
+      }
+    ),
+    warning = function(w) {
+      if (is.null(problem)) problem <<- trimws(conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  cmaValues <- if (is.null(result) || is.null(result$CMA) || nrow(result$CMA) == 0) NULL else result$CMA
+  list(cma = cmaValues, problem = problem)
 }
 
 #' Calculate adherence (batched processing)
@@ -457,6 +498,11 @@ calculateAdherence <- function(drugExposure,
     )'
           )
         ))
+
+        if (is.null(cmaAllMedGroup) || is.null(cmaAllMedGroup$CMA)) {
+          cli::cli_alert_warning("{i} for {subGroup} returned no result from AdhereR (see AdhereR messages above).")
+          next
+        }
 
         cmaAllMedGroup <- dplyr::mutate(cmaAllMedGroup$CMA, group = subGroup)
 

@@ -84,3 +84,20 @@ NULL
 #' @name batchSizeDoc
 #' @keywords internal
 NULL
+
+#' Documentation helper for temporary parameter
+#'
+#' @param temporary (`logical(1)`) If `TRUE`, the result is written to the
+#'   database as a temporary table. If `FALSE`, it is written as a permanent
+#'   table in the CDM write schema. Default: `TRUE`.
+#' @name temporaryDoc
+#' @keywords internal
+NULL
+
+#' Documentation helper for overwrite parameter
+#'
+#' @param overwrite (`logical(1)`) If a table with the given name already
+#'   exists, should it be overwritten? Default: `FALSE`.
+#' @name overwriteDoc
+#' @keywords internal
+NULL

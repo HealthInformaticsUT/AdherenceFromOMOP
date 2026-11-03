@@ -38,7 +38,7 @@ testthat::test_that("addCohorts testing", {
 
   cohortTable <- dplyr::tibble(
     cohort_definition_id = 1,
-    #subject_id = 1,
+    subject_id = 1,
     cohort_start_date = observ_dates$observation_period_start_date,
     cohort_end_date = observ_dates$observation_period_end_date
   )
@@ -66,10 +66,10 @@ testthat::test_that("addCohorts testing with sliding window", {
     dplyr::collect()
 
   cohortTable <- dplyr::tibble(
-    cohort_definition_id = 1,
-    subject_id = 1,
-    cohort_start_date = observ_dates$observation_period_start_date,
-    cohort_end_date = observ_dates$observation_period_end_date
+    cohort_definition_id = c(1,2),
+    subject_id = c(1,2),
+    cohort_start_date = c(observ_dates$observation_period_start_date,observ_dates$observation_period_start_date),
+    cohort_end_date = c(observ_dates$observation_period_end_date, observ_dates$observation_period_end_date)
   )
   cdm <- omopgenerics::insertTable(cdm, name = "test_cohort", table = cohortTable)
 

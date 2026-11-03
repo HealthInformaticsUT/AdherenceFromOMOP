@@ -2,8 +2,12 @@
 #'
 #' @inheritParams adherenceDataDoc
 #' @inheritParams cdmDoc
+#' @inheritParams nameDoc
+#' @inheritParams temporaryDoc
+#' @inheritParams overwriteDoc
 #'
-#' @returns Adherence data with BMI category information added.
+#' @returns Reference to database table with adherence data and BMI category
+#'   information added.
 #' @export
 #'
 #' @examples
@@ -20,7 +24,11 @@
 #' )
 #' withBMI <- addBMI(CMA_values, cdm)
 #' }
-addBMI <- function(adherenceData, cdm) {
+addBMI <- function(adherenceData,
+                   cdm,
+                   name = "addBMI_results",
+                   temporary = TRUE,
+                   overwrite = FALSE) {
   cma_table <- adherenceData
 
   bmi <- cdm$measurement %>%
@@ -47,9 +55,8 @@ addBMI <- function(adherenceData, cdm) {
     )
 
     cma_table <- cma_table %>%
-      dplyr::mutate(window.start.year.before = window.start - 365) %>%
+      dplyr::mutate(window.start.year.before = window.start - 365L) %>%
       dplyr::left_join(bmi, by)
-
 
     rows_without_bmi <- cma_table %>%
       dplyr::filter(is.na(value_source_value)) %>%
@@ -57,11 +64,7 @@ addBMI <- function(adherenceData, cdm) {
 
     closest_bmi <- rows_without_bmi %>%
       dplyr::left_join(bmi, by = "person_id") %>%
-      dplyr::mutate(
-        date_diff = abs(
-          dplyr::sql("EXTRACT(DAY FROM (measurement_date - window.start))")
-        )
-      ) %>%
+      dplyr::mutate(date_diff = abs(dplyr::sql('(measurement_date - "window.start")'))) %>%
       dplyr::group_by(name, person_id, window.start, window.end, group) %>%
       dbplyr::window_order(date_diff) %>%
       dplyr::filter(dplyr::row_number() == 1) %>%
@@ -118,6 +121,19 @@ addBMI <- function(adherenceData, cdm) {
       )
   }
 
+  if (temporary) {
+    cma_table <- cma_table %>%
+      dplyr::compute(name = name, temporary = TRUE, overwrite = overwrite)
+  } else {
+    cma_table <- cma_table %>%
+      dplyr::compute(
+        name = name,
+        temporary = FALSE,
+        schema = CDMConnector::cdmWriteSchema(cdm),
+        overwrite = overwrite
+      )
+  }
+
   return(cma_table)
 }
 
@@ -129,8 +145,14 @@ addBMI <- function(adherenceData, cdm) {
 #'   cohort_definition_id, person_id, cohort_start_date, cohort_end_date.
 #' @param cohortIdMappingToNames (`list` or `NULL`)
 #'   Optional mapping of cohort IDs to names.
+#' @param cdm (`cdm_reference` or `NULL`) A CDM reference object created with
+#'   CDMConnector. Required when `temporary = FALSE`, so the result can be
+#'   written as a permanent table in the CDM write schema.
+#' @inheritParams nameDoc
+#' @inheritParams temporaryDoc
+#' @inheritParams overwriteDoc
 #'
-#' @returns Reference to table with adherence and cohort data.
+#' @returns Reference to database table with adherence and cohort data.
 #' @export
 #'
 #' @examples
@@ -159,151 +181,112 @@ addBMI <- function(adherenceData, cdm) {
 #'
 #' withCohort <- addCohorts(CMA_values, cohortTable)
 #' }
-addCohorts <- function(adherenceData, cohort, cohortIdMappingToNames = NULL) {
+addCohorts <- function(adherenceData,
+                       cohort,
+                       cohortIdMappingToNames = NULL,
+                       cdm = NULL,
+                       name = "addCohorts_results",
+                       temporary = TRUE,
+                       overwrite = FALSE) {
+  if (!temporary && is.null(cdm)) {
+    cli::cli_alert_warning("cdm must be provided when temporary = FALSE. Writing as a temporary table instead.")
+    temporary <- TRUE
+  }
 
   cmaTable <- adherenceData %>% dplyr::rename_with(tolower)
 
+  # Unify both cases up front so there is a single join path
+  if (!all(c("window.start", "window.end") %in% colnames(cmaTable))) {
+    cmaTable <- cmaTable %>%
+      dplyr::mutate(
+        window.id    = 1L,
+        window.start = observation_window_start,
+        window.end   = observation_period_end_date
+      )
+  }
+
+  # One row per key in cmaTable — adjust if your grain differs
+  keyCols <- c("person_id", "name", "group", "window.id")
+
   uniqueCohorts <- cohort %>%
     dplyr::distinct(cohort_definition_id) %>%
-    dplyr::pull(cohort_definition_id)
+    dplyr::pull(cohort_definition_id) %>%
+    sort()
 
   if (is.null(cohortIdMappingToNames)) {
-    cohortIdMappingToNames <- list()
-    cohortIdMappingToNames["cohort_name"] <- uniqueCohorts
-    cohortIdMappingToNames["cohort_definition_id"] <- uniqueCohorts
+    cohortIdMappingToNames <- list(cohort_name = uniqueCohorts,
+                                   cohort_definition_id = uniqueCohorts)
   }
+  cohortNames <- cohortIdMappingToNames$cohort_name[
+    match(uniqueCohorts, cohortIdMappingToNames$cohort_definition_id)
+  ]
+  cohortNames <- ifelse(is.na(cohortNames), uniqueCohorts, cohortNames)
 
-  features <- c(
-    paste0("cohort_definition_id_", uniqueCohorts),
-    paste0("time_in_cohort_", uniqueCohorts)
+  indCols  <- paste0("cohort_", cohortNames)
+  timeCols <- paste0("time_in_", cohortNames)
+
+  # 1. Interval join on person + overlap, only the needed columns
+  overlapRows <- cmaTable %>%
+    dplyr::select(dplyr::all_of(keyCols), window.start, window.end) %>%
+    dplyr::inner_join(
+      cohort %>%
+        dplyr::select(cohort_definition_id, subject_id,
+                      cohort_start_date, cohort_end_date),
+      by = dplyr::join_by(
+        person_id == subject_id,
+        window.start <= cohort_end_date,
+        window.end   >= cohort_start_date
+      )
+    ) %>%
+    dplyr::mutate(
+      overlap_start = dplyr::if_else(cohort_start_date > window.start,
+                                     cohort_start_date, window.start),
+      overlap_end   = dplyr::if_else(cohort_end_date < window.end,
+                                     cohort_end_date, window.end)
+    ) %>%
+    dplyr::mutate(days = !!CDMConnector::datediff("overlap_start", "overlap_end")) %>%
+    dplyr::mutate(days = days + 1L)
+
+  # 2. Single aggregation straight to wide format
+  aggExprs <- c(
+    rlang::set_names(lapply(uniqueCohorts, function(id) {
+      rlang::expr(max(dplyr::if_else(cohort_definition_id == !!id, 1L, 0L), na.rm = TRUE))
+    }), indCols),
+    rlang::set_names(lapply(uniqueCohorts, function(id) {
+      rlang::expr(sum(dplyr::if_else(cohort_definition_id == !!id, days, 0L), na.rm = TRUE))
+    }), timeCols)
   )
 
-  has_windows <- all(c("window.start", "window.end") %in% colnames(cmaTable))
+  perWindow <- overlapRows %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(keyCols))) %>%
+    dplyr::summarise(!!!aggExprs, .groups = "drop")
 
-  # joining cma and cohort information differ whether or not sliding window was used
-  if (has_windows) {
-    cma_with_cohort <- cohort %>%
-      dplyr::mutate(cohort_name = cohort_definition_id) %>%
-      dplyr::right_join(
-        cmaTable,
-        dplyr::join_by(
-          overlaps(
-            x$cohort_start_date,
-            x$cohort_end_date,
-            y$window.start,
-            y$window.end
-          )
-        )
-      ) %>%
-      dplyr::mutate(
-        overlap_start = pmax(cohort_start_date, window.start),
-        overlap_end = pmin(cohort_end_date, window.end),
-        time_in_cohort = as.integer(pmax(
-          0, overlap_end - overlap_start
-        ))
-      )
+  # 3. Attach to all CMA rows; non-members get 0
+  result <- cmaTable %>%
+    dplyr::select(dplyr::all_of(keyCols), window.start, window.end, cma) %>%
+    dplyr::left_join(perWindow, by = keyCols) %>%
+    dplyr::mutate(dplyr::across(dplyr::all_of(c(indCols, timeCols)),
+                                ~ dplyr::coalesce(.x, 0L)))
+
+  result <- if (temporary) {
+    dplyr::compute(result, name = name, temporary = TRUE, overwrite = overwrite)
   } else {
-    cma_with_cohort <- cohort %>%
-      dplyr::mutate(cohort_name = cohort_definition_id) %>%
-      dplyr::right_join(
-        cmaTable,
-        dplyr::join_by(
-          overlaps(
-            x$cohort_start_date,
-            x$cohort_end_date,
-            y$observation_window_start,
-            y$observation_period_end_date
-          )
-        )
-      ) %>%
-      dplyr::mutate(
-        overlap_start = pmax(cohort_start_date, observation_window_start),
-        overlap_end = pmin(cohort_end_date, observation_period_end_date),
-        time_in_cohort = as.integer(pmax(
-          0, overlap_end - overlap_start
-        ))
-      ) %>%
-      dplyr::mutate(
-        window.id = 1,
-        window.start = observation_window_start,
-        window.end = observation_period_end_date,
-      )
+    dplyr::compute(result, name = name, temporary = FALSE,
+                   schema = CDMConnector::cdmWriteSchema(cdm),
+                   overwrite = overwrite)
   }
 
-  # Aggregate down to (subject x window x cohort)
-  cma_with_cohort <- cma_with_cohort %>%
-    dplyr::group_by(
-      person_id,
-      name,
-      window.id,
-      window.start,
-      window.end,
-      cma,
-      group,
-      cohort_name,
-      cohort_definition_id
-    ) %>%
-    dplyr::summarise(
-      time_in_cohort = sum(time_in_cohort, na.rm = TRUE),
-      .groups = "drop"
-    )
-
-  # Single-value check ("did anything match?"), not a collect of the data.
-  matched_rows <- cma_with_cohort %>%
-    dplyr::filter(!is.na(cohort_definition_id)) %>%
+  # 4. Cheap check on the materialised (small) table
+  nMatched <- result %>%
+    dplyr::filter(dplyr::if_any(dplyr::all_of(indCols), ~ .x > 0)) %>%
     dplyr::count() %>%
     dplyr::pull()
 
-  if (matched_rows == 0) {
+  if (nMatched == 0) {
     cli::cli_alert_info("Cohort time periods and time periods CMA is calculated for don't match.")
-    return(NULL)
   }
 
-  cohort_names <- stats::setNames(c(
-    paste0("cohort_definition_id_", cohortIdMappingToNames$cohort_definition_id),
-    paste0("time_in_cohort_", cohortIdMappingToNames$cohort_definition_id)
-  ), c(
-    paste0("cohort_", cohortIdMappingToNames$cohort_name),
-    paste0("time_in_", cohortIdMappingToNames$cohort_name)
-  ))
-
-  # Build one indicator + one time-in-cohort column per cohort id
-  # Each row's own cohort_definition_id determines which pair of columns
-  # gets a non-zero value; the rest are 0, so summing per (subject, window,
-  # group) below reproduces what the wide pivot + sum used to do.
-  indicator_exprs <- rlang::set_names(
-    lapply(uniqueCohorts, function(id) {
-      rlang::expr(dplyr::if_else(cohort_definition_id == !!id, 1L, 0L, missing = 0L))
-    }),
-    paste0("cohort_definition_id_", uniqueCohorts)
-  )
-  time_in_cohort_exprs <- rlang::set_names(
-    lapply(uniqueCohorts, function(id) {
-      rlang::expr(dplyr::if_else(cohort_definition_id == !!id, time_in_cohort, 0, missing = 0))
-    }),
-    paste0("time_in_cohort_", uniqueCohorts)
-  )
-
-  cma_table_with_data <- cma_with_cohort %>%
-    dplyr::mutate(!!!indicator_exprs, !!!time_in_cohort_exprs) %>%
-    dplyr::group_by(
-      person_id,
-      name,
-      window.id,
-      window.start,
-      window.end,
-      cma,
-      group
-    ) %>%
-    dplyr::summarise(dplyr::across(dplyr::all_of(features), ~ sum(., na.rm = TRUE)), .groups = "drop") %>%
-    dplyr::mutate(dplyr::across(
-      dplyr::all_of(features[1:(length(features) / 2)]),
-      ~ ifelse(. > 0, 1, 0)
-    )) %>%
-    dplyr::rename(dplyr::all_of(cohort_names)) %>%
-    dplyr::arrange(person_id)
-
-  return(cma_table_with_data)
+  result
 }
 
 
