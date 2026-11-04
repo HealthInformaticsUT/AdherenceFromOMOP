@@ -9,7 +9,7 @@
 #' @inheritParams groupByRouteDoc
 #' @inheritParams batchSizeDoc
 #' @inheritParams nameDoc
-#' @param ... Additional arguments passed to AdhereR CMA_sliding_window functions.
+#' @param ... Additional arguments passed to [calculateAdherenceSlidingWindow()] (e.g. `delayObservationWindowStart`, `extendFollowupWindowStart`, `cleanRows`) and on to AdhereR CMA_sliding_window functions.
 #'
 #' @return Database table reference containing adherence calculations with sliding windows.
 #'
@@ -99,6 +99,7 @@ calculateAdherenceSlidingWindowBatched <- function(drugExposure,
 #' @inheritParams cmaDoc
 #' @inheritParams medicationGroupDoc
 #' @inheritParams groupByRouteDoc
+#' @inheritParams extendFollowupWindowStartDoc
 #' @param delayObservationWindowStart (`logical(1)`) Should the observation window start
 #'   be delayed until the first prescription? Default: `FALSE`.
 #' @param cleanRows (`logical(1)`) If TRUE, rows with NA CMA values are dropped and
@@ -141,6 +142,7 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
                                             medicationGroup = NULL,
                                             groupByRoute = FALSE,
                                             delayObservationWindowStart = FALSE,
+                                            extendFollowupWindowStart = FALSE,
                                             cleanRows = TRUE,
                                             ...) {
   if (!all(cma %in% c(
@@ -158,7 +160,7 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
     return(NULL)
   }
 
-  df <- loadData(cdm = cdm, name = NULL, data = drugExposure, delayObservationWindowStart = delayObservationWindowStart)
+  df <- loadData(cdm = cdm, name = NULL, data = drugExposure, delayObservationWindowStart = delayObservationWindowStart, extendFollowupWindowStart = extendFollowupWindowStart)
 
   if (is.null(df)) {
     return(NULL)
@@ -263,7 +265,7 @@ slidingWindowCMA <- function(data, cma, ...) {
         followup.window.duration = "followup_period_duration",
         observation.window.duration = "observation_period_duration",
         observation.window.start = "observation_window_start",
-        followup.window.start = "observation_period_start_date",
+        followup.window.start = "followup_window_start",
         ...
       ),
       error = function(e) {
@@ -291,7 +293,7 @@ slidingWindowCMA <- function(data, cma, ...) {
 #' @inheritParams groupByRouteDoc
 #' @inheritParams batchSizeDoc
 #' @inheritParams nameDoc
-#' @param ... Additional arguments passed to AdhereR CMA functions.
+#' @param ... Additional arguments passed to [calculateAdherence()] (e.g. `delayObservationWindowStart`, `extendFollowupWindowStart`, `cleanRows`) and on to AdhereR CMA functions.
 #'
 #' @return Database table reference containing adherence calculations.
 #'
@@ -392,6 +394,7 @@ calculateAdherenceBatched <- function(drugExposure,
 #' @inheritParams cmaDoc
 #' @inheritParams medicationGroupDoc
 #' @inheritParams groupByRouteDoc
+#' @inheritParams extendFollowupWindowStartDoc
 #' @param delayObservationWindowStart (`logical(1)`) Should the observation window start
 #'   be delayed until the first prescription? Default: `FALSE`.
 #' @param cleanRows (`logical(1)`) If TRUE, rows with NA CMA values are dropped.
@@ -432,6 +435,7 @@ calculateAdherence <- function(drugExposure,
                                medicationGroup = NULL,
                                groupByRoute = FALSE,
                                delayObservationWindowStart = FALSE,
+                               extendFollowupWindowStart = FALSE,
                                cleanRows = TRUE,
                                ...) {
   if (!all(cma %in% c(
@@ -449,7 +453,7 @@ calculateAdherence <- function(drugExposure,
     return(NULL)
   }
 
-  df <- loadData(cdm = cdm, name = NULL, data = drugExposure, delayObservationWindowStart = delayObservationWindowStart)
+  df <- loadData(cdm = cdm, name = NULL, data = drugExposure, delayObservationWindowStart = delayObservationWindowStart, extendFollowupWindowStart = extendFollowupWindowStart)
   if (is.null(df)) {
     return(NULL)
   }
@@ -493,7 +497,7 @@ calculateAdherence <- function(drugExposure,
       observation.window.duration = "observation_period_duration",
       observation.window.duration.unit = "days",
       followup.window.duration = "followup_period_duration",
-      followup.window.start = "observation_period_start_date",
+      followup.window.start = "followup_window_start",
       ...
     )'
           )
@@ -548,8 +552,11 @@ addPatientInformation <- function(data, cma_values) {
 #'
 #' Loads drug exposure data from either a CDM database table or an in-memory data frame,
 #' validates required columns, and computes observation window parameters needed by AdhereR.
-#' Calculates observation_period_duration, followup_period_duration, and observation_window_start
-#' based on cohort dates (if available) or observation period dates.
+#' Calculates followup_window_start, followup_period_duration, observation_window_start and
+#' observation_period_duration based on cohort dates (if available) or observation period dates.
+#' Without a cohort, the follow-up window is the observation period. If
+#' extendFollowupWindowStart is TRUE, its start is moved back to cover drug exposures
+#' dated before the observation period start.
 #'
 #' @param cdm A cdm_reference object created by CDMConnector. If provided, data is read
 #'   from the database table specified by name. Either cdm+name or data must be provided.
@@ -560,12 +567,15 @@ addPatientInformation <- function(data, cma_values) {
 #' @param delayObservationWindowStart Logical. If TRUE, the observation window starts at the
 #'   first drug exposure date for each patient instead of the observation/cohort start date.
 #'   Useful for sliding window calculations to avoid empty initial windows. Default FALSE.
+#' @param extendFollowupWindowStart Logical. If TRUE and no cohort is used, the follow-up
+#'   window starts at the first drug exposure date when it precedes the observation period
+#'   start. Default FALSE.
 #'
-#' @returns Data frame with original columns plus computed columns: observation_period_duration,
-#'   followup_period_duration, and observation_window_start. Returns NULL if validation fails.
+#' @returns Data frame with original columns plus computed columns: followup_window_start,
+#'   followup_period_duration, observation_window_start and observation_period_duration. Returns NULL if validation fails.
 #'
 #' @keywords internal
-loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
+loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE, extendFollowupWindowStart = FALSE) {
   if (!is.null(cdm)) {
     if (is.null(name)) {
       cli::cli_alert_danger("Table name must be provided.")
@@ -606,18 +616,23 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
   }
 
   if (all(c("cohort_start_date", "cohort_end_date") %in% colnames(df))) {
-    # cohort period as followup period
+    # cohort period as observation window, observation period as follow-up window
+    df <- df %>%
+      dplyr::mutate(
+        followup_window_start = observation_period_start_date,
+        followup_period_duration = as.integer(
+          observation_period_end_date - observation_period_start_date
+        )
+      )
     if (delayObservationWindowStart) {
       df <- df %>%
         dplyr::group_by(person_id) %>%
         dplyr::mutate(
           observation_window_start = min(drug_exposure_start_date)
         ) %>%
+        dplyr::ungroup() %>%
         dplyr::mutate(
-          observation_period_duration = as.integer(cohort_end_date - observation_window_start),
-          followup_period_duration = as.numeric(
-            observation_period_end_date - observation_period_start_date
-          )
+          observation_period_duration = as.integer(cohort_end_date - observation_window_start)
         )
       cli::cli_alert_info("Observation window start is delayed.")
     } else {
@@ -625,44 +640,63 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE) {
       df <- df %>%
         dplyr::mutate(
           observation_period_duration = as.integer(cohort_end_date - cohort_start_date),
-          followup_period_duration = as.numeric(
-            observation_period_end_date - observation_period_start_date
-          )
-        ) %>%
-        dplyr::mutate(
           observation_window_start = cohort_start_date
         )
     }
   } else {
-    if (delayObservationWindowStart) {
+    # Drug exposures may be dated before the recorded observation period start. AdhereR
+    # rejects such persons when the observation window starts at the first exposure
+    # (it is then not within the follow-up window), so optionally the follow-up window
+    # start is moved back to the first exposure date.
+    df <- df %>%
+      dplyr::group_by(person_id) %>%
+      dplyr::mutate(
+        first_exposure_date = min(drug_exposure_start_date, na.rm = TRUE)
+      ) %>%
+      dplyr::ungroup()
+
+    earlyPersons <- df %>%
+      dplyr::filter(first_exposure_date < observation_period_start_date) %>%
+      dplyr::distinct(person_id) %>%
+      nrow()
+
+    if (extendFollowupWindowStart) {
       df <- df %>%
-        dplyr::group_by(person_id) %>%
         dplyr::mutate(
-          observation_window_start = min(drug_exposure_start_date)
-        ) %>%
-        dplyr::mutate(
-          observation_period_duration = as.integer(
-            observation_period_end_date - observation_window_start
-          ),
-          followup_period_duration = as.integer(
-            observation_period_end_date - observation_period_start_date
-          )
+          followup_window_start = pmin(observation_period_start_date, first_exposure_date)
         )
-      cli::cli_alert_info("Observation window start is delayed.")
+      if (earlyPersons > 0) {
+        cli::cli_alert_info("{earlyPersons} person(s) have drug exposures before their observation period start; their follow-up window starts at the first drug exposure.")
+      }
     } else {
       df <- df %>%
         dplyr::mutate(
-          observation_period_duration = as.integer(
-            observation_period_end_date - observation_period_start_date
-          ),
-          followup_period_duration = as.integer(
-            observation_period_end_date - observation_period_start_date
-          )
-        ) %>%
-        dplyr::mutate(
-          observation_window_start = observation_period_start_date
+          followup_window_start = observation_period_start_date
         )
+      if (earlyPersons > 0 && delayObservationWindowStart) {
+        cli::cli_alert_warning("{earlyPersons} person(s) have drug exposures before their observation period start and will fail in AdhereR. Set extendFollowupWindowStart = TRUE to start their follow-up window at the first drug exposure.")
+      }
     }
+
+    df <- df %>%
+      dplyr::mutate(
+        followup_period_duration = as.integer(observation_period_end_date - followup_window_start)
+      )
+
+    if (delayObservationWindowStart) {
+      df <- df %>%
+        dplyr::mutate(observation_window_start = first_exposure_date)
+      cli::cli_alert_info("Observation window start is delayed.")
+    } else {
+      df <- df %>%
+        dplyr::mutate(observation_window_start = followup_window_start)
+    }
+
+    df <- df %>%
+      dplyr::mutate(
+        observation_period_duration = as.integer(observation_period_end_date - observation_window_start)
+      ) %>%
+      dplyr::select(-first_exposure_date)
   }
 
   return(df)

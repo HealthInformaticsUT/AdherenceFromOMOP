@@ -11,6 +11,7 @@ calculateAdherenceSlidingWindow(
   medicationGroup = NULL,
   groupByRoute = FALSE,
   delayObservationWindowStart = FALSE,
+  extendFollowupWindowStart = FALSE,
   cleanRows = TRUE,
   ...
 )
@@ -38,6 +39,13 @@ Default: `FALSE`.}
 
 \item{delayObservationWindowStart}{(`logical(1)`) Should the observation window start
 be delayed until the first prescription? Default: `FALSE`.}
+
+\item{extendFollowupWindowStart}{(`logical(1)`) Only used when no cohort is used. If
+`TRUE`, persons with drug exposures dated before their observation period start get a
+follow-up window starting at their first drug exposure instead of the observation
+period start. Without this, such persons fail in AdhereR when
+`delayObservationWindowStart = TRUE` ("observation window is not within the follow-up
+window"). Default: `FALSE`.}
 
 \item{cleanRows}{(`logical(1)`) If TRUE, rows with NA CMA values are dropped and
 window.ID is reset to be sequential within each contiguous non-NA CMA interval.

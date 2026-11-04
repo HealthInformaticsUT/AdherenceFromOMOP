@@ -101,3 +101,15 @@ NULL
 #' @name overwriteDoc
 #' @keywords internal
 NULL
+
+#' Documentation helper for extendFollowupWindowStart parameter
+#'
+#' @param extendFollowupWindowStart (`logical(1)`) Only used when no cohort is used. If
+#'   `TRUE`, persons with drug exposures dated before their observation period start get a
+#'   follow-up window starting at their first drug exposure instead of the observation
+#'   period start. Without this, such persons fail in AdhereR when
+#'   `delayObservationWindowStart = TRUE` ("observation window is not within the follow-up
+#'   window"). Default: `FALSE`.
+#' @name extendFollowupWindowStartDoc
+#' @keywords internal
+NULL

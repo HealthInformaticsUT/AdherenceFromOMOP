@@ -42,7 +42,7 @@ Default: `FALSE`.}
 Default: 1000. Increase for better performance with large datasets, decrease
 if running into memory issues.}
 
-\item{...}{Additional arguments passed to AdhereR CMA_sliding_window functions.}
+\item{...}{Additional arguments passed to [calculateAdherenceSlidingWindow()] (e.g. `delayObservationWindowStart`, `extendFollowupWindowStart`, `cleanRows`) and on to AdhereR CMA_sliding_window functions.}
 }
 \value{
 Database table reference containing adherence calculations with sliding windows.

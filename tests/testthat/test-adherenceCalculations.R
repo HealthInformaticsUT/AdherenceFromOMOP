@@ -500,3 +500,45 @@ testthat::test_that("calculateAdherenceSlidingWindowBatched accepts and passes t
   testthat::expect_true(length(unique(dplyr::pull(result, group)))>1)
 }) #> Test passed 🎉
 
+
+testthat::test_that("extendFollowupWindowStart starts follow-up at exposures before the observation period", {
+  mock_cdm <- mockDrugExposure(nPerson = 10)
+  data <- AdherenceFromOMOP::generateChronicDrugExposure(
+    cdm = mock_cdm,
+    conceptSet = NULL,
+    name = "test_data",
+    overwrite = T
+  ) %>% dplyr::collect()
+
+  # move the observation period of one person so their exposures start before it
+  shiftedPerson <- data$person_id[1]
+  firstExposure <- min(data$drug_exposure_start_date[data$person_id == shiftedPerson])
+  data$observation_period_start_date[data$person_id == shiftedPerson] <- firstExposure + 10
+
+  # default: follow-up window is the observation period
+  df <- loadData(cdm = NULL, name = NULL, data = data)
+  shifted <- df[df$person_id == shiftedPerson, ]
+  testthat::expect_true(all(shifted$followup_window_start == shifted$observation_period_start_date))
+
+  # extended: follow-up window starts at the first exposure, end unchanged
+  df <- loadData(cdm = NULL, name = NULL, data = data, extendFollowupWindowStart = TRUE)
+  shifted <- df[df$person_id == shiftedPerson, ]
+  testthat::expect_true(all(shifted$followup_window_start == firstExposure))
+  testthat::expect_true(all(
+    shifted$followup_window_start + shifted$followup_period_duration == shifted$observation_period_end_date
+  ))
+
+  # with delayed observation window start the person fails without the extension
+  withoutExtension <- suppressWarnings(calculateAdherenceSlidingWindow(
+    drugExposure = data, cdm = NULL, cma = "CMA6", delayObservationWindowStart = TRUE
+  ))
+  testthat::expect_false(shiftedPerson %in% withoutExtension$person_id)
+
+  for (delay in c(FALSE, TRUE)) {
+    result <- calculateAdherenceSlidingWindow(
+      drugExposure = data, cdm = NULL, cma = "CMA6",
+      delayObservationWindowStart = delay, extendFollowupWindowStart = TRUE
+    )
+    testthat::expect_true(shiftedPerson %in% result$person_id)
+  }
+})

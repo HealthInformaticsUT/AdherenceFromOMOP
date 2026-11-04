@@ -4,7 +4,13 @@
 \alias{loadData}
 \title{Load and prepare data for adherence calculations}
 \usage{
-loadData(cdm, name, data, delayObservationWindowStart = FALSE)
+loadData(
+  cdm,
+  name,
+  data,
+  delayObservationWindowStart = FALSE,
+  extendFollowupWindowStart = FALSE
+)
 }
 \arguments{
 \item{cdm}{A cdm_reference object created by CDMConnector. If provided, data is read
@@ -19,15 +25,22 @@ Must contain columns: person_id, drug_exposure_start_date, days_supply, drug_con
 \item{delayObservationWindowStart}{Logical. If TRUE, the observation window starts at the
 first drug exposure date for each patient instead of the observation/cohort start date.
 Useful for sliding window calculations to avoid empty initial windows. Default FALSE.}
+
+\item{extendFollowupWindowStart}{Logical. If TRUE and no cohort is used, the follow-up
+window starts at the first drug exposure date when it precedes the observation period
+start. Default FALSE.}
 }
 \value{
-Data frame with original columns plus computed columns: observation_period_duration,
-  followup_period_duration, and observation_window_start. Returns NULL if validation fails.
+Data frame with original columns plus computed columns: followup_window_start,
+  followup_period_duration, observation_window_start and observation_period_duration. Returns NULL if validation fails.
 }
 \description{
 Loads drug exposure data from either a CDM database table or an in-memory data frame,
 validates required columns, and computes observation window parameters needed by AdhereR.
-Calculates observation_period_duration, followup_period_duration, and observation_window_start
-based on cohort dates (if available) or observation period dates.
+Calculates followup_window_start, followup_period_duration, observation_window_start and
+observation_period_duration based on cohort dates (if available) or observation period dates.
+Without a cohort, the follow-up window is the observation period. If
+extendFollowupWindowStart is TRUE, its start is moved back to cover drug exposures
+dated before the observation period start.
 }
 \keyword{internal}

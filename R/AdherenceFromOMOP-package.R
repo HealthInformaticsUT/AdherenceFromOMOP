@@ -18,6 +18,7 @@ utils::globalVariables(c(
   "value_source_value", "group", "date_of_birth", "sex", "date_of_death",
   "bmi_category", "avg_bmi", "value_source_value_num", "window.start.year.before",
   "observation_window_start", "date_diff",
+  "followup_window_start", "first_exposure_date",
   "drug_exposure_start_date", "observation_period_duration",
   "concept_class_id", "observation_period_start_date",
   "observation_period_end_date", "year", "n", "has_min_purchases",
