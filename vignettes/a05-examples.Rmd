@@ -115,6 +115,19 @@ medicationGroups <- medicationGrouping(cdm,
 
 ```
 
+Groups can also be split by route category (derived from the dose form of each drug, e.g. `"oral"`, `"injectable"`), and drugs can be restricted to specific route categories. `CodelistGenerator::availableRouteCategories(cdm)` lists the categories in the vocabulary.
+
+```{r, eval=FALSE}
+# only oral statins, one group per ingredient group and route, e.g. "other_statins_oral"
+medicationGroupsByRoute <- medicationGrouping(cdm,
+                             ingredientGroups = list(
+                               simvastatin_rosuvastatin = c("Simvastatin", "Rosuvastatin"),
+                               other_statins = c("Atorvastatin", "Pravastatin", "Fluvastatin", "Lovastatin", "Pitavastatin")
+                             ),
+                             groupByRoute = TRUE,
+                             routeCategory = "oral")
+```
+
 ```{r, eval=FALSE}
 adherenceCMA5 <- calculateAdherenceBatched(
   drugExposure = all_statins_cohort,

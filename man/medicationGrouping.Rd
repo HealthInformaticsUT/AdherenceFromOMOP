@@ -4,23 +4,52 @@
 \alias{medicationGrouping}
 \title{Function for grouping medications}
 \usage{
-medicationGrouping(cdm, ingredientGroups = NULL)
+medicationGrouping(
+  cdm,
+  ingredientGroups = NULL,
+  groupByRoute = FALSE,
+  routeCategory = NULL
+)
 }
 \arguments{
 \item{cdm}{(`cdm_reference`) A CDM reference object created with CDMConnector.}
 
 \item{ingredientGroups}{previously determined grouping, format as list(name = c(ingredient, ingredient)). Ingredient can be marked as concept ID or ingredient name.}
+
+\item{groupByRoute}{(`logical(1)`) If `TRUE`, each ingredient group is split by
+route category, giving groups named `"{group}_{route_category}"` (e.g.
+`"statins_oral"`). Concepts without a known route end up in
+`"{group}_unclassified_route"`. Default: `FALSE`.}
+
+\item{routeCategory}{(`character` or `NULL`) Route categories to include, e.g.
+`c("oral", "injectable")`. Drug concepts with other routes are left out. Passed
+to [CodelistGenerator::getDrugIngredientCodes()]. If `NULL`, all routes are
+included. Default: `NULL`.}
 }
 \value{
 codelist generator output with the structure of ingredientGroups
+  (split by route if `groupByRoute = TRUE`). Groups without any concepts are dropped.
 }
 \description{
-Uses CodelistGenerator to get drug ingredient codes
+Uses CodelistGenerator to get drug ingredient codes and combines them into the
+given ingredient groups. Optionally, only drugs with specific route categories are
+included, and/or each group is further split by route category. Route categories
+are derived by CodelistGenerator from the dose form of each drug concept, see
+[CodelistGenerator::availableRouteCategories()] for the categories present in the
+vocabulary.
 }
 \examples{
 \dontrun{
 
- mock_cdm <- CodelistGenerator::mockVocabRef()
-groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c("Adalimumab")))
+mock_cdm <- CodelistGenerator::mockVocabRef()
+groups <- medicationGrouping(mock_cdm, ingredientGroups = list(group1 = c("Adalimumab")))
+
+# only injectable drugs, one group per route
+groups <- medicationGrouping(
+  mock_cdm,
+  ingredientGroups = list(group1 = c("Adalimumab")),
+  groupByRoute = TRUE,
+  routeCategory = "injectable"
+)
 }
 }

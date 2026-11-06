@@ -23,5 +23,5 @@ utils::globalVariables(c(
   "concept_class_id", "observation_period_start_date",
   "observation_period_end_date", "year", "n", "has_min_purchases",
   "purchase_count", "CMA", "nonNASeries", "window.ID",
-  "overlaps"
+  "overlaps", "persons"
 ))

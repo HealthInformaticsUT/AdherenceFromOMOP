@@ -30,6 +30,7 @@ reference:
   desc: View statistics
 - contents:
   - summarisePatientCounts
+  - summariseAdherence
 - subtitle: Mockdata generation
   desc: Testing package, demos, internal functions
 - contents:

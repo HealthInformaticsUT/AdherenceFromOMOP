@@ -6,9 +6,9 @@
 #' @inheritParams cdmDoc
 #' @inheritParams cmaDoc
 #' @inheritParams medicationGroupDoc
-#' @inheritParams groupByRouteDoc
 #' @inheritParams batchSizeDoc
 #' @inheritParams nameDoc
+#' @inheritParams loggingDoc
 #' @param ... Additional arguments passed to [calculateAdherenceSlidingWindow()] (e.g. `delayObservationWindowStart`, `extendFollowupWindowStart`, `cleanRows`) and on to AdhereR CMA_sliding_window functions.
 #'
 #' @return Database table reference containing adherence calculations with sliding windows.
@@ -29,8 +29,9 @@ calculateAdherenceSlidingWindowBatched <- function(drugExposure,
                                                      "CMA9"
                                                    ),
                                                    medicationGroup = NULL,
-                                                   groupByRoute = FALSE,
                                                    batchSize = 10000,
+                                                   logFile = NULL,
+                                                   errorLogFile = NULL,
                                                    ...) {
   if (is.null(drugExposure)) {
     cli::cli_alert_warning("Provided drug exposure data is missing or faulty")
@@ -52,39 +53,45 @@ calculateAdherenceSlidingWindowBatched <- function(drugExposure,
     return(NULL)
   }
 
-  for (i in seq_along(batches)) {
-    cli::cli_alert_info(paste("Working with batch", names(batches)[i], "out of", length(batches)))
+  previousLogger <- startLogging(logFile, errorLogFile)
+  on.exit(stopLogging(previousLogger), add = TRUE)
+  runStart <- Sys.time()
+  logRunStart(
+    "calculateAdherenceSlidingWindowBatched", nameWithPrefix, length(uniqueSubjectIds),
+    batches, batchSize, cma, medicationGroup, ...
+  )
 
-    batch <- batches[[i]]
-    batchData <- drugExposure %>%
-      dplyr::filter(person_id %in% batch) %>%
-      dplyr::collect()
+  rowsWritten <- runBatches(
+    drugExposure = drugExposure,
+    batches = batches,
+    calculate = function(batchData) {
+      calculateAdherenceSlidingWindow(
+        drugExposure = batchData,
+        cdm = NULL,
+        cma = cma,
+        medicationGroup = medicationGroup,
+        ...
+      )
+    },
+    connection = connection,
+    tableId = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix)
+  )
 
-    result <- calculateAdherenceSlidingWindow(
-      drugExposure = batchData,
-      cdm = NULL,
-      cma = cma,
-      medicationGroup = medicationGroup,
-      groupByRoute = groupByRoute,
-      ...
+  newTable <- if (rowsWritten == 0) {
+    NULL
+  } else {
+    tryCatch(
+      {
+        dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = name, CDMConnector::dbms(connection)))
+      },
+      error = function(e) {
+        alertProblem("Failed to retrieve results table: {e$message}. Returning NULL.")
+        NULL
+      }
     )
-
-    if (is.null(result)) {
-      next
-    }
-
-    DBI::dbWriteTable(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix), value = result, append = TRUE)
   }
 
-  newTable <- tryCatch(
-    {
-      dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = name, CDMConnector::dbms(connection)))
-    },
-    error = function(e) {
-      cli::cli_alert_danger("Failed to retrieve results table: {e$message}. Returning NULL.")
-      NULL
-    }
-  )
+  logRunEnd("calculateAdherenceSlidingWindowBatched", runStart, rowsWritten, newTable)
 
   return(newTable)
 }
@@ -98,7 +105,6 @@ calculateAdherenceSlidingWindowBatched <- function(drugExposure,
 #' @inheritParams cdmDoc
 #' @inheritParams cmaDoc
 #' @inheritParams medicationGroupDoc
-#' @inheritParams groupByRouteDoc
 #' @inheritParams extendFollowupWindowStartDoc
 #' @param delayObservationWindowStart (`logical(1)`) Should the observation window start
 #'   be delayed until the first prescription? Default: `FALSE`.
@@ -140,7 +146,6 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
                                               "CMA9"
                                             ),
                                             medicationGroup = NULL,
-                                            groupByRoute = FALSE,
                                             delayObservationWindowStart = FALSE,
                                             extendFollowupWindowStart = FALSE,
                                             cleanRows = TRUE,
@@ -156,7 +161,7 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
     "CMA8",
     "CMA9"
   ))) {
-    cli::cli_alert_danger("Only CMAs 1-9 are expected.")
+    alertProblem("Only CMAs 1-9 are expected.")
     return(NULL)
   }
 
@@ -184,38 +189,36 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
         next
       }
 
-      groupSplits <- if (groupByRoute) splitGroupByRoute(filteredData, group) else stats::setNames(list(filteredData), group)
-      #print(groupSplits)
-      for (subGroup in names(groupSplits)) {
-        filteredData <- groupSplits[[subGroup]]
-        #print(subGroup)
-        if (nrow(filteredData) < 1){
-          next
-        }
-
-        groupResult <- slidingWindowCMA(filteredData, cma = i, ...)
-        cmaSlidingWindowMedGroup <- groupResult$cma
-
-        if (is.null(cmaSlidingWindowMedGroup) && !is.null(groupResult$problem)) {
-          # AdhereR fails the whole call if any patient fails, so retry per patient
-          cli::cli_alert_warning("{i} for {subGroup} failed for the whole batch ({groupResult$problem}), retrying per patient.")
-          perPatient <- lapply(split(filteredData, filteredData$person_id), slidingWindowCMA, cma = i, ...)
-          failed <- vapply(perPatient, function(x) is.null(x$cma) && !is.null(x$problem), logical(1))
-          problems <- vapply(perPatient[failed], `[[`, character(1), "problem")
-          for (problem in unique(problems)) {
-            failedIds <- names(problems)[problems == problem]
-            cli::cli_alert_danger("{i} for {subGroup} failed for {length(failedIds)} person(s) ({problem}): {failedIds}")
+      cmaSlidingWindowMedGroup <- tryCatch(
+        {
+          result <- AdhereR::CMA_sliding_window(
+            CMA.to.apply = i,
+            data = filteredData,
+            ID.colname = "person_id",
+            event.date.colname = "drug_exposure_start_date",
+            event.duration.colname = "days_supply",
+            medication.class.colname = "drug_concept_id",
+            followup.window.duration = "followup_period_duration",
+            observation.window.duration = "observation_period_duration",
+            observation.window.start = "observation_window_start",
+            followup.window.start = "followup_window_start",
+            ...
+          )
+          if (is.null(result) || is.null(result$CMA)) {
+            alertProblem("{i} for {group} returned no result from AdhereR (see AdhereR messages above).", type = "warning")
+            NULL
+          } else {
+            dplyr::mutate(result$CMA, group = group)
           }
-          cmaSlidingWindowMedGroup <- dplyr::bind_rows(lapply(perPatient, `[[`, "cma"))
-          if (nrow(cmaSlidingWindowMedGroup) == 0) {
-            cmaSlidingWindowMedGroup <- NULL
-          }
+        },
+        error = function(e) {
+          alertProblem("{i} for {group} failed: {conditionMessage(e)}")
+          NULL
         }
+      )
 
-        if (!is.null(cmaSlidingWindowMedGroup)) {
-          cmaSlidingWindowMedGroup <- dplyr::mutate(cmaSlidingWindowMedGroup, group = subGroup)
-          cma_med <- rbind(cma_med, cmaSlidingWindowMedGroup)
-        }
+      if (!is.null(cmaSlidingWindowMedGroup)) {
+        cma_med <- rbind(cma_med, cmaSlidingWindowMedGroup)
       }
     }
     if (!is.null(cma_med) && nrow(cma_med) > 0) {
@@ -238,50 +241,6 @@ calculateAdherenceSlidingWindow <- function(drugExposure,
   return(result)
 }
 
-#' Run AdhereR sliding window CMA
-#'
-#' Wraps AdhereR::CMA_sliding_window, which signals failure by returning NULL
-#' (or occasionally by throwing) rather than by a regular R error.
-#'
-#' @param data Data frame prepared by loadData.
-#' @param cma (`character(1)`) CMA to apply.
-#' @param ... Additional arguments passed to AdhereR::CMA_sliding_window.
-#'
-#' @returns A list with `cma` (the CMA data frame, or NULL if AdhereR returned nothing)
-#'   and `problem` (the first AdhereR error/warning message, or NULL).
-#'
-#' @keywords internal
-slidingWindowCMA <- function(data, cma, ...) {
-  problem <- NULL
-  result <- withCallingHandlers(
-    tryCatch(
-      AdhereR::CMA_sliding_window(
-        CMA.to.apply = cma,
-        data = data,
-        ID.colname = "person_id",
-        event.date.colname = "drug_exposure_start_date",
-        event.duration.colname = "days_supply",
-        medication.class.colname = "drug_concept_id",
-        followup.window.duration = "followup_period_duration",
-        observation.window.duration = "observation_period_duration",
-        observation.window.start = "observation_window_start",
-        followup.window.start = "followup_window_start",
-        ...
-      ),
-      error = function(e) {
-        problem <<- conditionMessage(e)
-        NULL
-      }
-    ),
-    warning = function(w) {
-      if (is.null(problem)) problem <<- trimws(conditionMessage(w))
-      invokeRestart("muffleWarning")
-    }
-  )
-  cmaValues <- if (is.null(result) || is.null(result$CMA) || nrow(result$CMA) == 0) NULL else result$CMA
-  list(cma = cmaValues, problem = problem)
-}
-
 #' Calculate adherence (batched processing)
 #'
 #' Calculates adherence in batches for large datasets.
@@ -290,9 +249,9 @@ slidingWindowCMA <- function(data, cma, ...) {
 #' @inheritParams cdmDoc
 #' @inheritParams cmaDoc
 #' @inheritParams medicationGroupDoc
-#' @inheritParams groupByRouteDoc
 #' @inheritParams batchSizeDoc
 #' @inheritParams nameDoc
+#' @inheritParams loggingDoc
 #' @param ... Additional arguments passed to [calculateAdherence()] (e.g. `delayObservationWindowStart`, `extendFollowupWindowStart`, `cleanRows`) and on to AdhereR CMA functions.
 #'
 #' @return Database table reference containing adherence calculations.
@@ -328,8 +287,9 @@ calculateAdherenceBatched <- function(drugExposure,
                                         "CMA9"
                                       ),
                                       medicationGroup = NULL,
-                                      groupByRoute = FALSE,
                                       batchSize = 1000,
+                                      logFile = NULL,
+                                      errorLogFile = NULL,
                                       ...) {
   if (is.null(drugExposure)) {
     cli::cli_alert_warning("Provided drug exposure data is missing or faulty")
@@ -351,35 +311,37 @@ calculateAdherenceBatched <- function(drugExposure,
     return(NULL)
   }
 
-  for (i in seq_along(batches)) {
-    cli::cli_alert_info(paste("Working with batch", names(batches)[i], "out of", length(batches)))
+  previousLogger <- startLogging(logFile, errorLogFile)
+  on.exit(stopLogging(previousLogger), add = TRUE)
+  runStart <- Sys.time()
+  logRunStart(
+    "calculateAdherenceBatched", nameWithPrefix, length(uniqueSubjectIds),
+    batches, batchSize, cma, medicationGroup, ...
+  )
 
-    batch <- batches[[i]]
-    batchData <- drugExposure %>%
-      dplyr::filter(person_id %in% batch) %>%
-      dplyr::collect()
+  rowsWritten <- runBatches(
+    drugExposure = drugExposure,
+    batches = batches,
+    calculate = function(batchData) {
+      calculateAdherence(
+        drugExposure = batchData,
+        cdm = NULL,
+        cma = cma,
+        medicationGroup = medicationGroup,
+        ...
+      )
+    },
+    connection = connection,
+    tableId = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix)
+  )
 
-    result <- calculateAdherence(
-      drugExposure = batchData,
-      cdm = NULL,
-      cma = cma,
-      medicationGroup = medicationGroup,
-      groupByRoute = groupByRoute,
-      ...
-    )
-
-    if (is.null(result)) {
-      next
-    }
-
-    DBI::dbWriteTable(conn = connection, name = DBI::Id(schema = writeSchema[[1]], table = nameWithPrefix), value = result, append = TRUE)
+  newTable <- if (rowsWritten == 0) {
+    NULL
+  } else {
+    dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = name, CDMConnector::dbms(connection)))
   }
 
-  if (is.null(result)) {
-    return(NULL)
-  }
-
-  newTable <- dplyr::tbl(connection, CDMConnector::inSchema(CDMConnector::cdmWriteSchema(cdm), table = name, CDMConnector::dbms(connection)))
+  logRunEnd("calculateAdherenceBatched", runStart, rowsWritten, newTable)
 
   return(newTable)
 }
@@ -393,7 +355,6 @@ calculateAdherenceBatched <- function(drugExposure,
 #' @inheritParams cdmDoc
 #' @inheritParams cmaDoc
 #' @inheritParams medicationGroupDoc
-#' @inheritParams groupByRouteDoc
 #' @inheritParams extendFollowupWindowStartDoc
 #' @param delayObservationWindowStart (`logical(1)`) Should the observation window start
 #'   be delayed until the first prescription? Default: `FALSE`.
@@ -433,7 +394,6 @@ calculateAdherence <- function(drugExposure,
                                  "CMA9"
                                ),
                                medicationGroup = NULL,
-                               groupByRoute = FALSE,
                                delayObservationWindowStart = FALSE,
                                extendFollowupWindowStart = FALSE,
                                cleanRows = TRUE,
@@ -449,7 +409,7 @@ calculateAdherence <- function(drugExposure,
     "CMA8",
     "CMA9"
   ))) {
-    cli::cli_alert_danger("Only CMAs 1-9 are expected.")
+    alertProblem("Only CMAs 1-9 are expected.")
     return(NULL)
   }
 
@@ -478,40 +438,34 @@ calculateAdherence <- function(drugExposure,
         next
       }
 
-      groupSplits <- if (groupByRoute) splitGroupByRoute(data, group) else stats::setNames(list(data), group)
+      cmaAllMedGroup <- eval(rlang::parse_expr(
+        paste0(
+          "AdhereR::",
+          i,
+          '(
+    data = data,
+    ID.colname = "person_id",
+    event.date.colname = "drug_exposure_start_date",
+    event.duration.colname = "days_supply",
+    medication.class.colname = "drug_concept_id",
+    observation.window.start = "observation_window_start",
+    observation.window.duration = "observation_period_duration",
+    observation.window.duration.unit = "days",
+    followup.window.duration = "followup_period_duration",
+    followup.window.start = "followup_window_start",
+    ...
+  )'
+        )
+      ))
 
-      for (subGroup in names(groupSplits)) {
-        data <- groupSplits[[subGroup]]
-
-        cmaAllMedGroup <- eval(rlang::parse_expr(
-          paste0(
-            "AdhereR::",
-            i,
-            '(
-      data = data,
-      ID.colname = "person_id",
-      event.date.colname = "drug_exposure_start_date",
-      event.duration.colname = "days_supply",
-      medication.class.colname = "drug_concept_id",
-      observation.window.start = "observation_window_start",
-      observation.window.duration = "observation_period_duration",
-      observation.window.duration.unit = "days",
-      followup.window.duration = "followup_period_duration",
-      followup.window.start = "followup_window_start",
-      ...
-    )'
-          )
-        ))
-
-        if (is.null(cmaAllMedGroup) || is.null(cmaAllMedGroup$CMA)) {
-          cli::cli_alert_warning("{i} for {subGroup} returned no result from AdhereR (see AdhereR messages above).")
-          next
-        }
-
-        cmaAllMedGroup <- dplyr::mutate(cmaAllMedGroup$CMA, group = subGroup)
-
-        cma_med <- rbind(cmaAllMedGroup, cma_med)
+      if (is.null(cmaAllMedGroup) || is.null(cmaAllMedGroup$CMA)) {
+        alertProblem("{i} for {group} returned no result from AdhereR (see AdhereR messages above).", type = "warning")
+        next
       }
+
+      cmaAllMedGroup <- dplyr::mutate(cmaAllMedGroup$CMA, group = group)
+
+      cma_med <- rbind(cmaAllMedGroup, cma_med)
     }
     computedCMAs[[i]] <- cma_med
   }
@@ -539,7 +493,7 @@ calculateAdherence <- function(drugExposure,
 #' @keywords internal
 addPatientInformation <- function(data, cma_values) {
   data <- data %>%
-    dplyr::select(-days_supply, -drug_concept_id, -drug_exposure_start_date)
+    dplyr::select(-days_supply, -drug_concept_id, -drug_exposure_start_date, -dplyr::any_of("route_concept_id"))
 
   result <- cma_values %>%
     dplyr::left_join(data, dplyr::join_by(person_id)) %>%
@@ -595,7 +549,7 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE, exten
   }
 
   if (nrow(df) < 1 | is.null(df)) {
-    cli::cli_alert_danger("Table { name } is empty.")
+    alertProblem("Table { name } is empty.")
 
     return(NULL)
   }
@@ -674,7 +628,7 @@ loadData <- function(cdm, name, data, delayObservationWindowStart = FALSE, exten
           followup_window_start = observation_period_start_date
         )
       if (earlyPersons > 0 && delayObservationWindowStart) {
-        cli::cli_alert_warning("{earlyPersons} person(s) have drug exposures before their observation period start and will fail in AdhereR. Set extendFollowupWindowStart = TRUE to start their follow-up window at the first drug exposure.")
+        alertProblem("{earlyPersons} person(s) have drug exposures before their observation period start and will fail in AdhereR. Set extendFollowupWindowStart = TRUE to start their follow-up window at the first drug exposure.", type = "warning")
       }
     }
 
@@ -743,91 +697,93 @@ cleanNARows <- function(data) {
   return(cleanedCMAData)
 }
 
-#' Split a medication group's data by administration route
-#'
-#' Further stratifies a medication group's drug exposure records by
-#' `route_concept_id`, on top of the general ingredient-level grouping.
-#' Records with a missing or zero `route_concept_id` remain part of the
-#' general ingredient-level group rather than being dropped or split out.
-#'
-#' @param data Data frame of drug exposure records already filtered to a
-#'   single medication group.
-#' @param groupName (`character(1)`) Name of the ingredient-level medication group.
-#'
-#' @returns Named list of data frames: one per route found in `data` (named
-#'   `"{groupName}_route{route_concept_id}"`), plus one named `groupName`
-#'   containing records without a route concept id (only present if such
-#'   records exist).
-#'
-#' @keywords internal
-splitGroupByRoute <- function(data, groupName) {
-  if (!"route_concept_id" %in% colnames(data)) {
-    cli::cli_alert_warning("route_concept_id column not found. Group {groupName} not split by route.")
-    return(stats::setNames(list(data), groupName))
-  }
-
-  hasRoute <- !is.na(data$route_concept_id) & data$route_concept_id != 0
-
-  result <- list()
-
-  noRouteData <- data[!hasRoute, , drop = FALSE]
-  if (nrow(noRouteData) > 0) {
-    result[[groupName]] <- noRouteData
-  }
-
-  routeData <- data[hasRoute, , drop = FALSE]
-  if (nrow(routeData) > 0) {
-    routeSplits <- split(routeData, routeData$route_concept_id)
-    names(routeSplits) <- paste0(groupName, "_route", names(routeSplits))
-    result <- c(result, routeSplits)
-  }
-
-  return(result)
-}
-
 #' Function for grouping medications
 #'
-#' Uses CodelistGenerator to get drug ingredient codes
+#' Uses CodelistGenerator to get drug ingredient codes and combines them into the
+#' given ingredient groups. Optionally, only drugs with specific route categories are
+#' included, and/or each group is further split by route category. Route categories
+#' are derived by CodelistGenerator from the dose form of each drug concept, see
+#' [CodelistGenerator::availableRouteCategories()] for the categories present in the
+#' vocabulary.
 #'
 #' @inheritParams cdmDoc
 #' @param ingredientGroups previously determined grouping, format as list(name = c(ingredient, ingredient)). Ingredient can be marked as concept ID or ingredient name.
+#' @param groupByRoute (`logical(1)`) If `TRUE`, each ingredient group is split by
+#'   route category, giving groups named `"{group}_{route_category}"` (e.g.
+#'   `"statins_oral"`). Concepts without a known route end up in
+#'   `"{group}_unclassified_route"`. Default: `FALSE`.
+#' @param routeCategory (`character` or `NULL`) Route categories to include, e.g.
+#'   `c("oral", "injectable")`. Drug concepts with other routes are left out. Passed
+#'   to [CodelistGenerator::getDrugIngredientCodes()]. If `NULL`, all routes are
+#'   included. Default: `NULL`.
 #'
 #' @returns codelist generator output with the structure of ingredientGroups
+#'   (split by route if `groupByRoute = TRUE`). Groups without any concepts are dropped.
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #'
-#'  mock_cdm <- CodelistGenerator::mockVocabRef()
-#' groups <- medicationGrouping(mock_cdm, ingredientGroups=list(group1 = c("Adalimumab")))
+#' mock_cdm <- CodelistGenerator::mockVocabRef()
+#' groups <- medicationGrouping(mock_cdm, ingredientGroups = list(group1 = c("Adalimumab")))
+#'
+#' # only injectable drugs, one group per route
+#' groups <- medicationGrouping(
+#'   mock_cdm,
+#'   ingredientGroups = list(group1 = c("Adalimumab")),
+#'   groupByRoute = TRUE,
+#'   routeCategory = "injectable"
+#' )
 #' }
-medicationGrouping <- function(cdm, ingredientGroups = NULL){
-
-  if (is.null(ingredientGroups)){
+medicationGrouping <- function(cdm, ingredientGroups = NULL, groupByRoute = FALSE, routeCategory = NULL) {
+  if (is.null(ingredientGroups)) {
     cli::cli_alert_info("Medication groups not provided")
     return(NULL)
   }
 
-  allIngredients <- unlist(ingredientGroups, use.names=FALSE)
+  if (!is.null(routeCategory)) {
+    availableRoutes <- CodelistGenerator::availableRouteCategories(cdm)
+    unknownRoutes <- setdiff(routeCategory, availableRoutes)
+    if (length(unknownRoutes) > 0) {
+      cli::cli_alert_warning("Route category not found in the vocabulary: {.val {unknownRoutes}}. Available: {.val {availableRoutes}}.")
+    }
+  }
+
+  allIngredients <- unique(unlist(ingredientGroups, use.names = FALSE))
   ingredientsAreNumeric <- all(grepl("^\\d+$", as.character(allIngredients)))
-  ingredientCodelist  <- CodelistGenerator::getDrugIngredientCodes(
+  # concept ids are only matched by CodelistGenerator when given as numbers
+  if (ingredientsAreNumeric) allIngredients <- as.numeric(allIngredients)
+  ingredientCodelist <- CodelistGenerator::getDrugIngredientCodes(
     cdm = cdm,
     name = allIngredients,
-    nameStyle = if (ingredientsAreNumeric) "{concept_id}" else "{concept_name}"
+    nameStyle = if (ingredientsAreNumeric) "{concept_id}" else "{concept_name}",
+    routeCategory = routeCategory
   )
+
+  # CodelistGenerator names codelists in snake case ("Other ingredient" -> "other_ingredient")
+  toCodelistName <- function(x) gsub("[^a-z0-9]+", "_", stringr::str_to_lower(trimws(x)))
+
   groupedCodelist <- list()
   for (groupName in names(ingredientGroups)) {
-    ingredientsInGroup <- stringr::str_to_lower(ingredientGroups[[groupName]])
+    ingredientsInGroup <- toCodelistName(ingredientGroups[[groupName]])
 
     # Find all codelist entries that match ingredients in this group
-    matchingKeys <- names(ingredientCodelist)[names(ingredientCodelist) %in% ingredientsInGroup]
+    matchingKeys <- names(ingredientCodelist)[toCodelistName(names(ingredientCodelist)) %in% ingredientsInGroup]
 
     # Combine and deduplicate concept IDs across matched ingredients
-    groupedCodelist[[groupName]] <- unique(unlist(ingredientCodelist[matchingKeys], use.names = FALSE))
+    conceptIds <- unique(unlist(ingredientCodelist[matchingKeys], use.names = FALSE))
+    if (length(conceptIds) == 0) {
+      cli::cli_alert_warning("No drug concepts found for group {.val {groupName}}{if (!is.null(routeCategory)) ' with the given route categories' else ''}. Group dropped.")
+      next
+    }
+    groupedCodelist[[groupName]] <- conceptIds
   }
 
   groupedCodelist <- omopgenerics::newCodelist(groupedCodelist)
 
-  return( groupedCodelist )
-}
+  if (groupByRoute && length(groupedCodelist) > 0) {
+    groupedCodelist <- CodelistGenerator::stratifyByRouteCategory(groupedCodelist, cdm = cdm)
+  }
 
+  return(groupedCodelist)
+}

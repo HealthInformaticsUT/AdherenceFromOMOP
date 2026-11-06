@@ -10,8 +10,9 @@ calculateAdherenceBatched(
   name = "adherenceFromOMOP_results",
   cma = c("CMA1", "CMA2", "CMA3", "CMA4", "CMA5", "CMA6", "CMA7", "CMA8", "CMA9"),
   medicationGroup = NULL,
-  groupByRoute = FALSE,
   batchSize = 1000,
+  logFile = NULL,
+  errorLogFile = NULL,
   ...
 )
 }
@@ -30,17 +31,26 @@ for details on each CMA type.}
 
 \item{medicationGroup}{(`list` or `NULL`) Named list where each element contains
 drug_concept_id values for a medication group. CMA is calculated separately for
-each group. If `NULL`, all medications are treated as one group.}
-
-\item{groupByRoute}{(`logical(1)`) If `TRUE`, further splits each medication
-group by `route_concept_id`, calculating CMA separately for each route
-found within the group. Drug exposure records with a missing or zero
-`route_concept_id` remain part of the general ingredient-level group.
-Default: `FALSE`.}
+each group. If `NULL`, all medications are treated as one group.
+Groups can be built from ingredients with [medicationGrouping()], which can also
+split them by route category (`groupByRoute`) or keep only specific routes
+(`routeCategory`).}
 
 \item{batchSize}{(`numeric(1)`) Number of subjects to process in each batch.
 Default: 1000. Increase for better performance with large datasets, decrease
 if running into memory issues.}
+
+\item{logFile}{(`character(1)` or `NULL`) Optional path of a run log. If given, the
+run settings, per-batch information with timestamps (persons, drug exposure
+records, rows written, duration, estimated remaining time) and a summary of the
+resulting adherence table (see [summariseAdherence()]) are appended to this file.
+Default: `NULL` (no logging).}
+
+\item{errorLogFile}{(`character(1)` or `NULL`) Optional path of the error log, where
+warnings and errors raised during the calculation are appended with timestamps and
+batch number. If `NULL` and `logFile` is given, `_errors` is added to the `logFile`
+name (e.g. `run.log` -> `run_errors.log`). Can also be used without `logFile`.
+Default: `NULL`.}
 
 \item{...}{Additional arguments passed to [calculateAdherence()] (e.g. `delayObservationWindowStart`, `extendFollowupWindowStart`, `cleanRows`) and on to AdhereR CMA functions.}
 }

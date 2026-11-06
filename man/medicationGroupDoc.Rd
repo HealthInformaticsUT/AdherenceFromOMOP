@@ -6,7 +6,10 @@
 \arguments{
 \item{medicationGroup}{(`list` or `NULL`) Named list where each element contains
 drug_concept_id values for a medication group. CMA is calculated separately for
-each group. If `NULL`, all medications are treated as one group.}
+each group. If `NULL`, all medications are treated as one group.
+Groups can be built from ingredients with [medicationGrouping()], which can also
+split them by route category (`groupByRoute`) or keep only specific routes
+(`routeCategory`).}
 }
 \description{
 Documentation helper for medicationGroup parameter

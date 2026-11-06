@@ -9,6 +9,7 @@ export(calculateAdherenceSlidingWindowBatched)
 export(generateChronicDrugExposure)
 export(medicationGrouping)
 export(mockDrugExposure)
+export(summariseAdherence)
 export(summarisePatientCounts)
 importFrom(data.table,"%like%")
 importFrom(dplyr,

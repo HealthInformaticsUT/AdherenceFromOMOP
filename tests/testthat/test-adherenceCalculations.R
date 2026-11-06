@@ -353,152 +353,52 @@ test_that("groups are correctly merged from individual codelist entries", {
   expect_equal(length(groups), 1)
 })
 
-# groupByRoute
-#####
-
-testthat::test_that("splitGroupByRoute splits data by route and keeps missing/zero routes in the general group", {
-  data <- dplyr::tibble(
-    person_id = 1:5,
-    route_concept_id = c(NA, 0, 111, 111, 222)
-  )
-
-  result <- splitGroupByRoute(data, "group1")
-
-  testthat::expect_setequal(names(result), c("group1", "group1_route111", "group1_route222"))
-  testthat::expect_equal(nrow(result[["group1"]]), 2)
-  testthat::expect_equal(nrow(result[["group1_route111"]]), 2)
-  testthat::expect_equal(nrow(result[["group1_route222"]]), 1)
+testthat::test_that("multi-word ingredient names are matched", {
+  mock_cdm <- CodelistGenerator::mockVocabRef()
+  groups <- medicationGrouping(mock_cdm, ingredientGroups = list(other = "Other ingredient"))
+  testthat::expect_equal(groups$other, 13)
 })
 
-testthat::test_that("splitGroupByRoute keeps everything in the general group when no route ids are present", {
-  data <- dplyr::tibble(
-    person_id = 1:3,
-    route_concept_id = c(NA, NA, 0)
-  )
+testthat::test_that("medicationGrouping splits groups by route when groupByRoute = TRUE", {
+  mock_cdm <- CodelistGenerator::mockVocabRef()
+  ingredientGroups <- list(group1 = c("Adalimumab", "Other ingredient"), group2 = "Other ingredient")
 
-  result <- splitGroupByRoute(data, "group1")
+  groups <- medicationGrouping(mock_cdm, ingredientGroups = ingredientGroups, groupByRoute = TRUE)
 
-  testthat::expect_equal(names(result), "group1")
-  testthat::expect_equal(nrow(result[["group1"]]), 3)
+  testthat::expect_setequal(names(groups), c("group1_injectable", "group2_injectable"))
+  testthat::expect_setequal(groups$group1_injectable, c(10, 13))
+  testthat::expect_equal(groups$group2_injectable, 13)
+  # without the option groups keep their names
+  testthat::expect_setequal(names(medicationGrouping(mock_cdm, ingredientGroups)), c("group1", "group2"))
 })
 
-testthat::test_that("splitGroupByRoute falls back to a single group when route_concept_id is missing", {
-  data <- dplyr::tibble(person_id = 1:3)
+testthat::test_that("medicationGrouping keeps only the requested route categories", {
+  mock_cdm <- CodelistGenerator::mockVocabRef()
+  ingredientGroups <- list(group1 = "Adalimumab")
+
+  injectable <- medicationGrouping(mock_cdm, ingredientGroups, routeCategory = "injectable")
+  testthat::expect_setequal(injectable$group1, c(10, 13))
+
+  # no topical adalimumab in the mock vocabulary: the group is dropped
+  topical <- suppressWarnings(medicationGrouping(mock_cdm, ingredientGroups, routeCategory = "topical"))
+  testthat::expect_length(topical, 0)
 
   testthat::expect_message(
-    result <- splitGroupByRoute(data, "group1"),
-    "route_concept_id column not found"
+    suppressWarnings(medicationGrouping(mock_cdm, ingredientGroups, routeCategory = "not_a_route")),
+    "Route category not found"
   )
-
-  testthat::expect_equal(names(result), "group1")
-  testthat::expect_equal(nrow(result[["group1"]]), 3)
 })
 
-testthat::test_that("calculateAdherence with groupByRoute = TRUE splits groups by route, keeping routeless records in the general group", {
-  mock_cdm <- mockDrugExposure()
-  ref <- AdherenceFromOMOP::generateChronicDrugExposure(
-    cdm = mock_cdm,
-    conceptSet = NULL,
-    name = "test_data",
-    overwrite = TRUE
+testthat::test_that("medicationGrouping combines routeCategory and groupByRoute", {
+  mock_cdm <- CodelistGenerator::mockVocabRef()
+  groups <- medicationGrouping(
+    mock_cdm,
+    ingredientGroups = list(group1 = 10),
+    groupByRoute = TRUE,
+    routeCategory = "injectable"
   )
-  in_memory_data <- dplyr::collect(ref)
-
-  set.seed(1)
-  in_memory_data$route_concept_id <- sample(
-    c(NA, 0, 4132161, 4171047),
-    nrow(in_memory_data),
-    replace = TRUE
-  )
-
-  result <- calculateAdherence(drugExposure = in_memory_data, cma = "CMA5", groupByRoute = TRUE)
-
-  testthat::expect_false(is.null(result))
-  testthat::expect_true("all" %in% unique(result$group))
-  testthat::expect_true(any(grepl("^all_route", unique(result$group))))
+  testthat::expect_equal(names(groups), "group1_injectable")
 })
-
-testthat::test_that("calculateAdherence with groupByRoute = FALSE (default) does not split by route", {
-  mock_cdm <- mockDrugExposure()
-  ref <- AdherenceFromOMOP::generateChronicDrugExposure(
-    cdm = mock_cdm,
-    conceptSet = NULL,
-    name = "test_data",
-    overwrite = TRUE
-  )
-  in_memory_data <- dplyr::collect(ref)
-
-  set.seed(1)
-  in_memory_data$route_concept_id <- sample(
-    c(NA, 0, 4132161, 4171047),
-    nrow(in_memory_data),
-    replace = TRUE
-  )
-
-  result <- calculateAdherence(drugExposure = in_memory_data, cma = "CMA5")
-
-  testthat::expect_false(is.null(result))
-  testthat::expect_equal(unique(result$group), "all")
-})
-
-testthat::test_that("calculateAdherenceSlidingWindow with groupByRoute = TRUE splits groups by route", {
-  mock_cdm <- mockDrugExposure()
-  ref <- AdherenceFromOMOP::generateChronicDrugExposure(
-    cdm = mock_cdm,
-    conceptSet = NULL,
-    name = "test_data",
-    overwrite = TRUE
-  )
-  in_memory_data <- dplyr::collect(ref)
-
-  set.seed(1)
-  in_memory_data$route_concept_id <- sample(
-    c(NA, 0, 4132161, 4171047),
-    nrow(in_memory_data),
-    replace = TRUE
-  )
-
-  result <- calculateAdherenceSlidingWindow(
-    drugExposure = in_memory_data,
-    cdm = NULL,
-    cma = "CMA1",
-    groupByRoute = TRUE
-  )
-
-  testthat::expect_false(is.null(result))
-  testthat::expect_true(any(grepl("^all_route", unique(result$group))))
-})
-
-testthat::test_that("calculateAdherenceBatched accepts and passes through groupByRoute", {
-  mock_cdm <- mockDrugExposure()
-  data <- AdherenceFromOMOP::generateChronicDrugExposure(
-    cdm = mock_cdm,
-    conceptSet = NULL,
-    name = "test_data",
-    overwrite = TRUE
-  )
-
-  result <- calculateAdherenceBatched(cdm = mock_cdm, drugExposure = data, cma = "CMA5", groupByRoute = TRUE)
-
-  testthat::expect_true(!is.null(result))
-}) #> Test passed 🎉
-
-testthat::test_that("calculateAdherenceSlidingWindowBatched accepts and passes through groupByRoute", {
-  mock_cdm <- mockDrugExposure()
-  data <- AdherenceFromOMOP::generateChronicDrugExposure(
-    cdm = mock_cdm,
-    conceptSet = NULL,
-    name = "test_data",
-    overwrite = TRUE)
-
-  data_with_route_concept_id <- data %>%
-    dplyr::mutate(route_concept_id = if (person_id < 3) 0 else 1)
-
-  result <- calculateAdherenceSlidingWindowBatched(cdm = mock_cdm, drugExposure = data_with_route_concept_id, cma = "CMA1", groupByRoute = TRUE)
-
-  testthat::expect_true(!is.null(result))
-  testthat::expect_true(length(unique(dplyr::pull(result, group)))>1)
-}) #> Test passed 🎉
 
 
 testthat::test_that("extendFollowupWindowStart starts follow-up at exposures before the observation period", {
@@ -541,4 +441,29 @@ testthat::test_that("extendFollowupWindowStart starts follow-up at exposures bef
     )
     testthat::expect_true(shiftedPerson %in% result$person_id)
   }
+})
+
+testthat::test_that("results have no route_concept_id and are not duplicated when a person has several routes", {
+  mock_cdm <- mockDrugExposure(nPerson = 3, recordPerson = 6)
+  data <- AdherenceFromOMOP::generateChronicDrugExposure(
+    cdm = mock_cdm,
+    conceptSet = NULL,
+    name = "test_data",
+    overwrite = T
+  ) %>% dplyr::collect()
+
+  # one person with both oral and ocular records
+  personRows <- which(data$person_id == data$person_id[1])
+  data$route_concept_id <- 4132161
+  data$route_concept_id[personRows[seq_along(personRows) %% 2 == 0]] <- 40549429
+
+  result <- suppressWarnings(calculateAdherenceSlidingWindow(
+    drugExposure = data, cdm = NULL, cma = "CMA6"
+  ))
+
+  testthat::expect_false("route_concept_id" %in% colnames(result))
+  testthat::expect_equal(
+    nrow(result),
+    nrow(dplyr::distinct(result, name, person_id, group, window.start))
+  )
 })

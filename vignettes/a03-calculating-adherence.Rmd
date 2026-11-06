@@ -96,3 +96,24 @@ results_delayed <- calculateAdherenceSlidingWindowBatched(
 )
 results_delayed
 ```
+
+## Logging and result summary
+
+Long batched runs can optionally be logged. If `logFile` is given, the run settings, information on each batch (number of persons and drug exposure records, rows written, duration and estimated remaining time) with timestamps, and a summary of the resulting adherence table are written to that file. Warnings and errors (e.g. persons AdhereR failed for) go to a separate error log, by default next to the run log with `_errors` added to the name. Use `errorLogFile` to choose another path, or to keep only an error log. Without these arguments nothing is logged.
+
+```{r, eval = FALSE}
+results <- calculateAdherenceSlidingWindowBatched(
+  drugExposure = chronicDrugExposure,
+  cdm = cdm,
+  name = "AdherenceFromOMOP_demo_sw_logged",
+  cma = c("CMA5"),
+  medicationGroup = medicationGroup,
+  logFile = "logs/adherence_sw.log" # errors in logs/adherence_sw_errors.log
+)
+```
+
+The same summary can be computed for any adherence table, either in-memory or in the database. It gives the number of rows, distinct persons, CMAs and groups, as well as persons, rows and mean and median CMA per CMA and group.
+
+```{r, eval = FALSE}
+summariseAdherence(results)
+```
