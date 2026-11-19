@@ -423,10 +423,11 @@ calculateAdherence <- function(drugExposure,
     names(medicationGroup) <- c("all")
   }
 
-  cma_med <- vector("list")
   computedCMAs <- vector("list")
   for (i in cma) {
     cli::cli_alert_info("Calculating { i }.")
+    # reset per CMA, otherwise results of earlier CMAs are repeated under this CMA's name
+    cma_med <- NULL
 
     for (group in names(medicationGroup)) {
       # cli::cli_alert_info("Group {group}.")
@@ -467,7 +468,13 @@ calculateAdherence <- function(drugExposure,
 
       cma_med <- rbind(cmaAllMedGroup, cma_med)
     }
-    computedCMAs[[i]] <- cma_med
+    if (!is.null(cma_med) && nrow(cma_med) > 0) {
+      computedCMAs[[i]] <- cma_med
+    }
+  }
+
+  if (length(computedCMAs) == 0) {
+    return(NULL)
   }
 
   cma_values <- dplyr::bind_rows(computedCMAs, .id = "name")

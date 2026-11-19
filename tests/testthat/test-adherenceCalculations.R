@@ -467,3 +467,19 @@ testthat::test_that("results have no route_concept_id and are not duplicated whe
     nrow(dplyr::distinct(result, name, person_id, group, window.start))
   )
 })
+
+testthat::test_that("calculateAdherence with several CMAs does not repeat earlier CMAs' results", {
+  mock_cdm <- mockDrugExposure()
+  data <- AdherenceFromOMOP::generateChronicDrugExposure(
+    cdm = mock_cdm, conceptSet = NULL, name = "test_data", overwrite = T
+  ) %>% dplyr::collect()
+
+  both <- suppressWarnings(calculateAdherence(drugExposure = data, cma = c("CMA1", "CMA7")))
+  cma7 <- suppressWarnings(calculateAdherence(drugExposure = data, cma = "CMA7"))
+
+  # one row per CMA, person and group
+  testthat::expect_equal(nrow(both), nrow(dplyr::distinct(both, name, person_id, group)))
+  # CMA7 values are the same as when calculated alone
+  bothCma7 <- dplyr::arrange(dplyr::filter(both, name == "CMA7"), person_id)
+  testthat::expect_equal(bothCma7$CMA, dplyr::arrange(cma7, person_id)$CMA)
+})

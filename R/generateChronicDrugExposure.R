@@ -3,7 +3,8 @@
 #' @inheritParams cdmDoc
 #' @inheritParams nameDoc
 #' @inheritParams conceptSetDoc
-#' @inheritParams indexDateDoc
+#' @param indexDate Deprecated and no longer used. Date of death is taken from the
+#'   death table for each person.
 #'
 #' @param overwrite If table with provided name exists, should it be overwritten?
 #'   Default: `FALSE`.
@@ -62,14 +63,25 @@ generateChronicDrugExposure <- function(cdm,
     data <- dplyr::filter(cdm$drug_exposure, drug_concept_id %in% conceptIds)
   }
 
+  if (!missing(indexDate)) {
+    cli::cli_alert_warning("{.arg indexDate} is deprecated and no longer used: date of death is taken from the death table for each person.")
+  }
+
   cli::cli_alert_info("Using Patient Profiles package to add patient data.")
+
+  # Date of death is a person-level attribute. PatientProfiles::addDeathDate() only
+  # returns it when death is on or after the index date, which gave records dated
+  # after death an NA and so duplicated the person's adherence rows.
+  deathDates <- cdm$death %>%
+    dplyr::group_by(person_id) %>%
+    dplyr::summarise(date_of_death = min(death_date, na.rm = TRUE), .groups = "drop")
 
   data <- data %>%
     dplyr::left_join(cdm$concept, by = c("drug_concept_id" = "concept_id")) %>%
     dplyr::inner_join(cdm$observation_period, by = c("person_id")) %>%
     PatientProfiles::addDateOfBirth() %>%
     PatientProfiles::addSex() %>%
-    PatientProfiles::addDeathDate(indexDate = indexDate) %>%
+    dplyr::left_join(deathDates, by = "person_id") %>%
     dplyr::select(
       person_id,
       drug_concept_id,

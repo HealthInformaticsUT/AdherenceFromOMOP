@@ -68,3 +68,30 @@ testthat::test_that("correct general use case with cohort", {
 
   # DBI::dbDisconnect(connection)
 }) #> Test passed 🎉
+
+testthat::test_that("date_of_death is the same on all records of a person, also records after death", {
+  cdm <- mockDrugExposure(nPerson = 5)
+
+  # move one person's death to the middle of their drug exposures
+  exposures <- cdm$drug_exposure %>% dplyr::collect()
+  person <- exposures$person_id[1]
+  personDates <- sort(exposures$drug_exposure_start_date[exposures$person_id == person])
+  deathDate <- personDates[ceiling(length(personDates) / 2)]
+  death <- cdm$death %>%
+    dplyr::collect() %>%
+    dplyr::mutate(death_date = dplyr::if_else(person_id == person, deathDate, death_date))
+  cdm <- omopgenerics::insertTable(cdm, name = "death", table = death)
+
+  data <- generateChronicDrugExposure(cdm = cdm, conceptSet = NULL, name = "test_data", overwrite = T) %>%
+    dplyr::collect()
+
+  personData <- data[data$person_id == person, ]
+  testthat::expect_true(any(personData$drug_exposure_start_date > deathDate))
+  testthat::expect_true(all(personData$date_of_death == deathDate))
+  # one date of death per person
+  testthat::expect_equal(nrow(dplyr::distinct(data, person_id, date_of_death)), dplyr::n_distinct(data$person_id))
+
+  # so adherence results are not duplicated
+  result <- suppressWarnings(calculateAdherenceSlidingWindow(drugExposure = data, cma = "CMA7"))
+  testthat::expect_equal(nrow(result), nrow(dplyr::distinct(result, name, person_id, group, window.start)))
+})

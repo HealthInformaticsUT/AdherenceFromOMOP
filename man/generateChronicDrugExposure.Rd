@@ -25,8 +25,8 @@ generateChronicDrugExposure(
 Recommended to use [CodelistGenerator::getDrugIngredientCodes()].
 If `NULL`, all drugs in the drug_exposure table are included.}
 
-\item{indexDate}{(`character(1)`) Name of the column to use as the index date
-for patient-level calculations. Default: `"drug_exposure_start_date"`.}
+\item{indexDate}{Deprecated and no longer used. Date of death is taken from the
+death table for each person.}
 
 \item{overwrite}{If table with provided name exists, should it be overwritten?
 Default: `FALSE`.}

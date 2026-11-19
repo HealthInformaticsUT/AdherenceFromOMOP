@@ -33,7 +33,7 @@ addBMI <- function(adherenceData,
 
   bmi <- cdm$measurement %>%
     dplyr::semi_join(cma_table, by = "person_id") %>%
-    dplyr::filter(measurement_concept_id == 4245997) %>%
+    dplyr::filter(measurement_concept_id == 4245997, !is.na(value_source_value)) %>%
     dplyr::select(
       person_id,
       measurement_date,
@@ -54,9 +54,16 @@ addBMI <- function(adherenceData,
       )
     )
 
+    # Several measurements can fall in the year before a window: keep only the
+    # latest one, so each window stays a single row
     cma_table <- cma_table %>%
       dplyr::mutate(window.start.year.before = window.start - 365L) %>%
-      dplyr::left_join(bmi, by)
+      dplyr::left_join(bmi, by) %>%
+      dplyr::group_by(name, person_id, window.start, window.end, group) %>%
+      # row_number(desc()) rather than window_order(desc()): dbplyr < 2.6 fails on the
+      # latter with "Can't extract an environment from a call"
+      dplyr::filter(dplyr::row_number(dplyr::desc(measurement_date)) == 1) %>%
+      dplyr::ungroup()
 
     rows_without_bmi <- cma_table %>%
       dplyr::filter(is.na(value_source_value)) %>%
@@ -205,8 +212,9 @@ addCohorts <- function(adherenceData,
       )
   }
 
-  # One row per key in cmaTable — adjust if your grain differs
-  keyCols <- c("person_id", "name", "group", "window.id")
+  # One row per window. window.id is not unique (cleanNARows restarts it after
+  # gaps), so windows are identified by their start date
+  keyCols <- c("person_id", "name", "group", "window.start")
 
   uniqueCohorts <- cohort %>%
     dplyr::distinct(cohort_definition_id) %>%
@@ -227,7 +235,7 @@ addCohorts <- function(adherenceData,
 
   # 1. Interval join on person + overlap, only the needed columns
   overlapRows <- cmaTable %>%
-    dplyr::select(dplyr::all_of(keyCols), window.start, window.end) %>%
+    dplyr::distinct(dplyr::across(dplyr::all_of(keyCols)), window.end) %>%
     dplyr::inner_join(
       cohort %>%
         dplyr::select(cohort_definition_id, subject_id,
@@ -261,9 +269,9 @@ addCohorts <- function(adherenceData,
     dplyr::group_by(dplyr::across(dplyr::all_of(keyCols))) %>%
     dplyr::summarise(!!!aggExprs, .groups = "drop")
 
-  # 3. Attach to all CMA rows; non-members get 0
+  # 3. Attach to all CMA rows, keeping their other columns (e.g. from addBMI);
+  #    non-members get 0
   result <- cmaTable %>%
-    dplyr::select(dplyr::all_of(keyCols), window.start, window.end, cma) %>%
     dplyr::left_join(perWindow, by = keyCols) %>%
     dplyr::mutate(dplyr::across(dplyr::all_of(c(indCols, timeCols)),
                                 ~ dplyr::coalesce(.x, 0L)))
